@@ -22,7 +22,6 @@
     "multer": "^2.0.2",
     "node": "^22.19.0",
     "node-fetch": "^3.3.2",
-    "openssl": "^2.0.0",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "qrcode": "^1.5.4",
