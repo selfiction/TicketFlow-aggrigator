@@ -8,6 +8,7 @@ const QRCode = require('qrcode');
 const multer = require('multer');
 const fs = require('fs');
 const https = require('https');
+var os = require('os');
 
 
 
@@ -2900,17 +2901,22 @@ const options = {
   cert: fs.readFileSync("/etc/letsencrypt/live/ticketflow.kz/privkey.pem") // сертификат SLL
 };
 
-// Запуск сервера
-// app.listen(PORT, () => {
-//   console.log(`Сервер запущен на порту ${PORT}`);
-//   console.log(`Откройте http://localhost:${PORT} в браузере`);
-// });
+// const options = {
+//   key: fs.readFileSync("server.key"),   // приватный
+//   cert: fs.readFileSync("server.crt") // сертификат SLL
+// };
 
-https.createServer(options, app).listen(3000, () => {
-  var os = require('os');
-  os.hostname()
-  console.log("HTTPS сервер запущен: https://localhost:3000");
+//Запуск сервера
+app.listen(PORT, () => {
+  console.log(`Сервер запущен на порту ${PORT}`);
+  console.log(`Откройте http://localhost:${PORT} в браузере`);
 });
+
+// https.createServer(options, app).listen(3000, () => {
+  
+//   os.hostname();
+//   console.log("HTTPS сервер запущен: https://localhost:3000");
+// });
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
