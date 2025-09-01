@@ -2896,8 +2896,8 @@ app.get('/', (req, res) => {
 });
 
 const options = {
-  key: fs.readFileSync("fullchain.pem"),   // приватный
-  cert: fs.readFileSync("privkey.pem") // сертификат SLL
+  key: fs.readFileSync("/etc/letsencrypt/live/ticketflow.kz/fullchain.pem"),   // приватный
+  cert: fs.readFileSync("/etc/letsencrypt/live/ticketflow.kz/privkey.pem") // сертификат SLL
 };
 
 // Запуск сервера
