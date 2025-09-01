@@ -1781,6 +1781,7 @@
                             </div>
                             
                             
+
                             <div class="price-summary">
                                 <h4>Стоимость</h4>
                                 <div class="price-item">
@@ -3516,6 +3517,15 @@ async function downloadAsPDF() {
     showLoading('Генерация PDF...');
     
     const tickets = document.querySelectorAll('.print-ticket');
+const canvasPromises = Array.from(tickets).map(async (ticketElement, index) => {
+  const canvas = await html2canvas(ticketElement);
+  const ticketObj = currentPrintTickets[index];
+  const code = ticketObj && ticketObj.code ? ticketObj.code : `unknown-${index+1}`;
+  return {
+    canvas,
+    filename: `билет-${code}.png`
+  };
+});
     
     if (tickets.length === 0) {
       alert('Ошибка! Нет билетов для скачивания');

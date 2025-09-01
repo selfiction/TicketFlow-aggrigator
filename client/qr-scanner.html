@@ -325,21 +325,60 @@
             resultDiv.style.display = 'block';
         }
 
+        
+
         // Обработчики для кнопок действий
         document.getElementById('use-ticket').addEventListener('click', async function() {
-            if (!currentTicket) return;
-            
-            // Здесь будет код для отметки билета как использованного
-            alert(`Билет ${currentTicket.code} отмечен как использованный`);
+    if (!currentTicket) return;
+
+    try {
+        const response = await fetch(`/api/tickets/${currentTicket.code}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${auth.token}`
+            },
+            body: JSON.stringify({ status: 'Использован' })
         });
+        const data = await response.json();
+        if (data.status === 'success') {
+            alert(`Билет ${currentTicket.code} отмечен как использованный`);
+            // Можно обновить UI, скрыть кнопку и т.д.
+        } else {
+            alert('Ошибка: ' + data.message);
+        }
+    } catch (error) {
+        alert('Ошибка при обновлении статуса билета');
+    }
+});
 
         document.getElementById('invalidate-ticket').addEventListener('click', async function() {
             if (!currentTicket) return;
-            
-            // Здесь будет код для аннулирования билета
+
+            try {
+        const response = await fetch(`/api/tickets/${currentTicket.code}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${auth.token}`
+            },
+            body: JSON.stringify({ status: 'Недействителен' })
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
             alert(`Билет ${currentTicket.code} аннулирован`);
+            // Можно обновить UI, скрыть кнопку и т.д.
+        } else {
+            alert('Ошибка: ' + data.message);
+        }
+    } catch (error) {
+        alert('Ошибка при обновлении статуса билета');
+    }
+            
+
         });
         console.log(navigator.mediaDevices);
+        
     </script>
 </body>
 </html>

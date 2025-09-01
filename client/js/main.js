@@ -694,6 +694,7 @@ if (seatingConfig) {
 }
 
 // И добавляем в форму создание мероприятия скрытое поле
+const form = document.getElementById('create-event-form');
 const seatingConfigInput = document.createElement('input');
 seatingConfigInput.type = 'hidden';
 seatingConfigInput.id = 'seatingConfig';
