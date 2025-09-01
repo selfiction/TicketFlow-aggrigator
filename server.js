@@ -2908,7 +2908,7 @@ const options = {
 
 https.createServer(options, app).listen(3000, () => {
   var os = require('os');
-  console.log(os.hostname());
+  os.hostname()
   console.log("HTTPS сервер запущен: https://localhost:3000");
 });
 
