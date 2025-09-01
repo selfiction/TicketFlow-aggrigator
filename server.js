@@ -2896,7 +2896,7 @@ app.get('/', (req, res) => {
 });
 
 const options = {
-  key: fs.readFileSync("/etc/letsencrypt/live/ticketflow.kz/fullchain.pem"),   // приватный ключ
+  key: fs.readFileSync("/etc/letsencrypt/live/ticketflow.kz/fullchain.pem"),   // приватный
   cert: fs.readFileSync("/etc/letsencrypt/live/ticketflow.kz/privkey.pem") // сертификат
 };
 
