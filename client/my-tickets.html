@@ -640,7 +640,7 @@ function displayTickets(tickets, sortFilter = 'newest') {
                     </div>
                     
                     <div class="ticket-price">
-                        ${price} руб.
+                        ${price} тг.
                     </div>
                 </div>
                 ${ticket.qrCode ? `
@@ -724,7 +724,7 @@ function displayTickets(tickets, sortFilter = 'newest') {
                         <p><strong>Место:</strong> ${ticket.event?.venue || 'Не указано'}${ticket.event?.city ? ', ' + ticket.event.city : ''}</p>
                         <p><strong>Адрес:</strong> ${ticket.event?.address || 'Не указан'}</p>
                         <p><strong>Место:</strong> ${ticket.seat || 'Не указано'}</p>
-                        <p><strong>Цена:</strong> ${ticket.price} руб.</p>
+                        <p><strong>Цена:</strong> ${ticket.price} тг.</p>
                         <p><strong>Статус:</strong> ${ticket.status}</p>
                         <p><strong>Дата покупки:</strong> ${purchaseDate}</p>
                     </div>

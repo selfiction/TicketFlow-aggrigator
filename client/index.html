@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TicketFlow - Платформа продажи билетов</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -16,12 +17,6 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo" id="homeLink">Ticket<span>Flow</span></div>
-                <nav>
-                    <ul>
-                        <li><a href="#" data-page="events">Все мероприятия</a></li>
-                        <li><a href="#" data-page="my-events">Мои мероприятия</a></li>
-                    </ul>
-                </nav>
                 <div class="header-buttons">
                     <button class="scan-qr-btn" id="scanQrBtn" style="display: none;" onclick="window.location.href='/scan-qr'">
     <i class="fas fa-qrcode"></i> Сканировать QR
@@ -272,7 +267,7 @@
         </div>
         
         <div class="form-input">
-          <label for="sectionPrice">Цена билета (руб.)</label>
+          <label for="sectionPrice">Цена билета (тг.)</label>
           <input type="number" id="sectionPrice" min="0" required value="1000">
         </div>
         
@@ -352,10 +347,6 @@
                         <div class="form-input">
                             <label for="registerConfirm">Подтверждение пароля</label>
                             <input type="password" id="registerConfirm" placeholder="Повторите пароль" required>
-                        </div>
-                        <div class="admin-checkbox">
-                            <input type="checkbox" id="registerAdmin">
-                            <label for="registerAdmin">Регистрация как администратор</label>
                         </div>
                         <button type="submit" class="modal-submit">Зарегистрироваться</button>
                         <div class="form-footer">
@@ -543,7 +534,7 @@ function visualizeReservedSeating() {
     // Заголовок секции
     const sectionHeader = document.createElement('div');
     sectionHeader.className = 'section-header';
-    sectionHeader.innerHTML = `<h4>${section.name} (${section.price} руб.)</h4>`;
+    sectionHeader.innerHTML = `<h4>${section.name} (${section.price} тг.)</h4>`;
     container.appendChild(sectionHeader);
     
     // Места секции
@@ -644,7 +635,7 @@ function renderSectionsList() {
       </div>
       <div class="section-info">
         Рядов: ${section.rows} | Мест в ряду: ${section.seatsPerRow} | 
-        Цена: ${section.price} руб. | Всего мест: ${section.rows * section.seatsPerRow}
+        Цена: ${section.price} тг. | Всего мест: ${section.rows * section.seatsPerRow}
       </div>
     `;
     
@@ -867,7 +858,7 @@ function renderSectionsList() {
       <div class="section-header">
         <div>
           <h3 class="section-title">${section.name}</h3>
-          <div class="section-price">${section.price} руб./место</div>
+          <div class="section-price">${section.price} тг./место</div>
         </div>
         <div class="section-controls">
           <button class="btn-secondary" onclick="openSectionModal(${index})">
@@ -894,7 +885,7 @@ function renderSectionsList() {
         </div>
         <div class="info-item">
           <div class="info-label">Общая выручка</div>
-          <div class="info-value">${totalRevenue.toLocaleString()} руб.</div>
+          <div class="info-value">${totalRevenue.toLocaleString()} тг.</div>
         </div>
       </div>
       
@@ -1033,7 +1024,7 @@ window.addEventListener('resize', debounce(() => {
     updateHallVisualization();
 }, 250));
 
-// И при загрузке
+// // И при загрузке
 document.addEventListener('DOMContentLoaded', updateSeatSizes);
 
 </script>

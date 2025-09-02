@@ -1786,7 +1786,7 @@
                                 <h4>Стоимость</h4>
                                 <div class="price-item">
                                     <span>Цена за билет:</span>
-                                    <span id="ticketPrice">0 руб.</span>
+                                    <span id="ticketPrice">0 тг.</span>
                                 </div>
                                 <div class="price-item">
                                     <span>Количество:</span>
@@ -1794,7 +1794,7 @@
                                 </div>
                                 <div class="price-total">
                                     <span>Итого:</span>
-                                    <span id="totalPrice">0 руб.</span>
+                                    <span id="totalPrice">0 тг.</span>
                                 </div>
                             </div>
                             
@@ -1879,7 +1879,7 @@
         
         <div class="success-message">
           <h3>Вы успешно приобрели билеты!</h3>
-          <p>Куплено <strong id="purchasedTicketsCount">0</strong> билетов на сумму <strong id="purchasedTotalPrice">0</strong> руб.</p>
+          <p>Куплено <strong id="purchasedTicketsCount">0</strong> билетов на сумму <strong id="purchasedTotalPrice">0</strong> тг.</p>
         </div>
         
         <div class="ticket-codes-preview">
@@ -2097,7 +2097,7 @@ document.addEventListener('keydown', function(e) {
             
             // Устанавливаем цену и максимальное количество
             ticketPrice = currentEvent.price;
-            document.getElementById('ticketPrice').textContent = `${ticketPrice} руб.`;
+            document.getElementById('ticketPrice').textContent = `${ticketPrice} тг.`;
             document.getElementById('maxTickets').textContent = currentEvent.ticketsAvailable;
             
             // Обновляем доступность покупки
@@ -2130,7 +2130,7 @@ function changeQuantity(delta) {
         // Обновление стоимости
         function updatePrice() {
             const total = currentQuantity * ticketPrice;
-            document.getElementById('totalPrice').textContent = `${total} руб.`;
+            document.getElementById('totalPrice').textContent = `${total} тг.`;
         }
         
         // Обновление интерфейса покупки
@@ -2385,7 +2385,7 @@ function createTicketElement(ticket, index) {
       
       <div class="ticket-info-item">
         <span class="ticket-label">Цена</span>
-        <span class="ticket-value">${ticket.price || 0} руб.</span>
+        <span class="ticket-value">${ticket.price || 0} тг.</span>
       </div>
       
       <div class="ticket-info-item">
@@ -2473,7 +2473,7 @@ function viewTicketDetails(ticketCode) {
 function invalidateTicket(ticketCode) {
   if (confirm(`Вы уверены, что хотите аннулировать билет ${ticketCode}?`)) {
     // Здесь будет вызов API для аннулирования билета
-    alert('warning', 'Аннулирование', `Билет ${ticketCode} аннулирован`);
+    alert('Аннулирование! Билет ${ticketCode} аннулирован');
     
     // Обновляем статус в интерфейсе
     updateTicketStatus(ticketCode, 'Недействителен');
@@ -2499,7 +2499,7 @@ function updateTicketStatus(ticketCode, newStatus) {
 // Модальное окно информации о билетах
 function showTicketsInfo(tickets) {
   if (!tickets || tickets.length === 0) {
-    alert('info', 'Нет билетов', 'У вас пока нет купленных билетов');
+    alert('Нет билетов! У вас пока нет купленных билетов');
     return;
   }
 
@@ -2518,7 +2518,7 @@ function showTicketsInfo(tickets) {
                 <div class="ticket-item">
                     <div class="ticket-code">${ticket.code}</div>
                     <div class="ticket-seat">${ticket.seat || 'Место будет назначено'}</div>
-                    <div class="ticket-price">${ticket.price} руб.</div>
+                    <div class="ticket-price">${ticket.price} тг.</div>
                 </div>
             `).join('')}
         </div>
@@ -2671,7 +2671,7 @@ function visualizeReservedSeatingForPurchase() {
     // Заголовок секции
     const sectionHeader = document.createElement('div');
     sectionHeader.className = 'section-header';
-    sectionHeader.innerHTML = `<h4>${section.name} - ${section.price} руб.</h4>`;
+    sectionHeader.innerHTML = `<h4>${section.name} - ${section.price} тг.</h4>`;
     container.appendChild(sectionHeader);
     
     // Места секции
@@ -2979,7 +2979,7 @@ function closePurchaseSuccessModal() {
 // Вспомогательные функции
 function copyTicketCode(code) {
   navigator.clipboard.writeText(code).then(() => {
-    alert('success', 'Скопировано!', `Код ${code} скопирован в буфер обмена`);
+    alert(`Скопировано! Код ${code} скопирован в буфер обмена`);
   }).catch(err => {
     console.error('Ошибка копирования:', err);
   });
@@ -3190,7 +3190,7 @@ function createTicketElement(ticket, index) {
         
         <div class="ticket-detail-item">
           <span class="ticket-detail-label">Цена</span>
-          <span class="ticket-detail-value">${ticket.price || 0} руб.</span>
+          <span class="ticket-detail-value">${ticket.price || 0} тг.</span>
         </div>
         
         <div class="ticket-detail-item">
@@ -3392,7 +3392,7 @@ async function createPrintTicketElement(ticket) {
       
       <div class="print-ticket-info-item">
         <span class="print-ticket-info-label">Цена:</span>
-        <span class="print-ticket-info-value">${ticket.price || 0} руб.</span>
+        <span class="print-ticket-info-value">${ticket.price || 0} тг.</span>
       </div>
       
       <div class="print-ticket-info-item">

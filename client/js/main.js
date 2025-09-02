@@ -1,37 +1,8 @@
-// В main.js добавляем простую функцию для кнопок покупки
-function setupSimplePurchaseHandlers() {
-    // Обработчик для кнопок "Купить билет"
-    document.addEventListener('click', async function(e) {
-        if (e.target.classList.contains('book-btn')) {
-            e.preventDefault();
-            
-            const eventCard = e.target.closest('.event-card');
-            if (!eventCard) return;
-            
-            const eventId = eventCard.getAttribute('data-event-id');
-            if (!eventId) return;
-
-            // Используем простую функцию покупки
-            await window.simpleBuyTicket(eventId);
-        }
-    });
-
-    // Альтернативный обработчик для старых браузеров
-    const bookButtons = document.querySelectorAll('.book-btn');
-    bookButtons.forEach(button => {
-        button.onclick = async function() {
-            const eventCard = this.closest('.event-card');
-            const eventId = eventCard.getAttribute('data-event-id');
-            await window.simpleBuyTicket(eventId);
-        };
-    });
-}
-
 document.addEventListener('DOMContentLoaded', function() {
   // Инициализация приложения
   initApp();
-  setupSimplePurchaseHandlers();
 });
+
 async function initApp() {
   
   // Проверка авторизации
@@ -67,12 +38,12 @@ function updateUI() {
         // Пользователь авторизован
         authButtons.style.display = 'none';
         userMenu.style.display = 'flex';
-        
+        createEventBtn.style.display = 'none';
         userName.textContent = auth.user.name;
         dropdownName.textContent = auth.user.name;
         dropdownRole.textContent = auth.isAdmin() ? 'Администратор' : 'Пользователь';
         userAvatar.textContent = auth.user.name.charAt(0).toUpperCase();
-        scanQrBtn.style.display = 'block';
+        scanQrBtn.style.display = 'none';
         
         // Показываем/скрываем кнопки в зависимости от роли
         if (auth.isAdmin()) {
@@ -81,7 +52,6 @@ function updateUI() {
             scanQrBtn.style.display = 'flex'; // Показываем кнопку сканирования
         } else {
             adminLink.style.display = 'none';
-            createEventBtn.style.display = 'block';
 
         }
     } else {
@@ -274,50 +244,7 @@ function addBookButtonHandlers() {
   });
 }
 
-// Обновляем отображение мероприятий
-function displayEvents(events) {
-  const eventsGrid = document.querySelector('.events-grid');
-  if (!eventsGrid) return;
-  
-  eventsGrid.innerHTML = '';
-  
-  if (events.length === 0) {
-    eventsGrid.innerHTML = '<p class="no-events">Мероприятий пока нет</p>';
-    return;
-  }
-  
-  events.forEach(event => {
-    const eventDate = new Date(event.date).toLocaleDateString('ru-RU', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-    
-    const eventCard = document.createElement('div');
-    eventCard.className = 'event-card';
-    eventCard.setAttribute('data-event-id', event._id); // Используем _id
-    
-    eventCard.innerHTML = `
-      <div class="event-image" style="background-color: #8338ec; background-image: url('${event.image}'); background-size: cover;">
-        ${event.image ? '' : 'Изображение мероприятия'}
-      </div>
-      <div class="event-details">
-        <div class="event-date">${eventDate}, ${event.time}</div>
-        <h3 class="event-title">${event.title}</h3>
-        <div class="event-location">${event.city}, ${event.venue}</div>
-        <div class="event-price">от ${event.price} руб.</div>
-        <button class="book-btn">
-          Купить билет
-        </button>
-      </div>
-    `;
-    
-    eventsGrid.appendChild(eventCard);
-  });
-  
-  // Добавляем обработчики для всех кнопок покупки
-  addBookButtonHandlers();
-}
+
 
 
 
@@ -632,7 +559,7 @@ async function handleRegister(e) {
   const email = document.getElementById('registerEmail').value;
   const password = document.getElementById('registerPassword').value;
   const confirm = document.getElementById('registerConfirm').value;
-  const isAdmin = document.getElementById('registerAdmin').checked;
+  const isAdmin = auth.user && auth.user.isAdmin === true;
   
   if (password !== confirm) {
     notifications.error('Ошибка регистрации', 'Пароли не совпадают!');
@@ -706,18 +633,14 @@ function handleLogout(e) {
   e.preventDefault();
   const result = auth.logout();
   notifications.info('Выход из системы', result.message);
+  scanQrBtn.style.display = 'none';
   updateUI();
   closeUserDropdown();
 }
 
 function openLoginModal() {
-  const openLoginBtn = document.getElementById('openLogin');
-  if (openLoginBtn) {
-    openLoginBtn.addEventListener('click', () => {
-      document.getElementById('loginModal').classList.add('active');
-      switchToTab('login');
-    });
-  }
+  document.getElementById('loginModal').classList.add('active');
+  switchToTab('login');
 }
 
 function openRegisterModal() {

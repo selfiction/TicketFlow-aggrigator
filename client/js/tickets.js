@@ -435,14 +435,14 @@ async function purchaseTickets() {
     
     // Проверяем авторизацию
     if (!auth.isAuthenticated()) {
-        alert('warning', 'Требуется авторизация', 'Для покупки билетов необходимо войти в систему');
+        alert('Требуется авторизация! Для покупки билетов необходимо войти в систему');
         openLoginModal();
         return;
     }
 
     // Проверяем доступность мероприятия
     if (!currentEvent || !currentEvent._id) {
-        alert('error', 'Ошибка', 'Мероприятие не выбрано');
+        alert('Ошибка! Мероприятие не выбрано');
         return;
     }
 
@@ -452,12 +452,12 @@ async function purchaseTickets() {
     if (seatingConfig.type === 'reserved') {
         // Для reserved seating проверяем выбранные места
         if (selectedSeats.length === 0) {
-            alert('error', 'Ошибка', 'Выберите места для покупки');
+            alert('Ошибка! Выберите места для покупки');
             return;
         }
         
         if (selectedSeats.length !== currentQuantity) {
-            alert('error', 'Ошибка', `Выберите ${currentQuantity} мест(а)`);
+            alert(`Ошибка! Выберите ${currentQuantity} мест(а)`);
             return;
         }
     }
@@ -502,7 +502,7 @@ async function purchaseTickets() {
 
         if (result.status === 'success') {
             // Успешная покупка
-            alert('success', 'Успех!', result.message);
+            //alert('!Успех!', result.message);
             
             // Показываем информацию о билетах
 
@@ -510,12 +510,12 @@ async function purchaseTickets() {
             
         } else {
             // Ошибка от сервера
-            alert('error', 'Ошибка', result.message || 'Неизвестная ошибка');
+            alert('Ошибка!', result.message || 'Неизвестная ошибка');
         }
 
     } catch (error) {
         console.error('Ошибка покупки:', error);
-        alert('error', 'Ошибка', 'Не удалось покупку. Попробуйте еще раз.');
+        alert('Ошибка! Не удалось покупку. Попробуйте еще раз.');
     } finally {
         // Восстанавливаем кнопку
         purchaseBtn.disabled = false;
