@@ -2896,27 +2896,27 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'client', 'index.html'));
 });
 
-// const options = {
-//   key: fs.readFileSync("/etc/letsencrypt/live/ticketflow.kz/fullchain.pem"),   // приватный
-//   cert: fs.readFileSync("/etc/letsencrypt/live/ticketflow.kz/privkey.pem") // сертификат SLL
-// };
-
 const options = {
-  key: fs.readFileSync("server.key"),   // приватный
-  cert: fs.readFileSync("server.crt") // сертификат SLL
+  key: fs.readFileSync("/etc/letsencrypt/live/ticketflow.kz/fullchain.pem"),   // приватный
+  cert: fs.readFileSync("/etc/letsencrypt/live/ticketflow.kz/privkey.pem") // сертификат SLL
 };
 
-// //Запуск сервера
-// app.listen(PORT, () => {
-//   console.log(`Сервер запущен на порту ${PORT}`);
-//   console.log(`Откройте http://localhost:${PORT} в браузере`);
-// });
+// const options = {
+//   key: fs.readFileSync("server.key"),   // приватный
+//   cert: fs.readFileSync("server.crt") // сертификат SLL
+// };
 
-https.createServer(options, app).listen(3000, () => {
-  
-  os.hostname();
-  console.log("HTTPS сервер запущен: https://localhost:3000");
+//Запуск сервера
+app.listen(PORT, () => {
+  console.log(`Сервер запущен на порту ${PORT}`);
+  console.log(`Откройте http://localhost:${PORT} в браузере`);
 });
+
+// https.createServer(options, app).listen(3000, () => {
+  
+//   os.hostname();
+//   console.log("HTTPS сервер запущен: https://localhost:3000");
+// });
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
