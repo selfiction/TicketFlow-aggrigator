@@ -146,18 +146,51 @@
                     </div>
 
                     <div class="form-section">
-                        <h3 class="form-section-title">Билеты</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="event-price">Цена билета (тг.)</label>
-                                <input type="number" id="event-price" min="0" required placeholder="0">
-                            </div>
-                            <div class="form-group">
-                                <label for="event-capacity">Количество билетов</label>
-                                <input type="number" id="event-capacity" min="1" required placeholder="100">
-                            </div>
-                        </div>
-                    </div>
+    <h3 class="form-section-title">Билеты и рассадка</h3>
+    
+    <!-- Переключатель типа рассадки -->
+    <div class="form-group">
+        <label>Тип рассадки</label>
+        <div class="seating-type-toggle">
+            <label class="radio-option">
+                <input type="radio" name="seatingType" value="free" checked>
+                <span class="radio-checkmark"></span>
+                Свободная рассадка
+            </label>
+            <label class="radio-option">
+                <input type="radio" name="seatingType" value="zones">
+                <span class="radio-checkmark"></span>
+                Зоны с разной стоимостью
+            </label>
+        </div>
+    </div>
+<div id="freeSeatingSection" style="display: none;">
+  <div class="form-group">
+    <label for="event-price">Цена билета (тг.) *</label>
+    <input type="number" id="event-price" name="price" min="0" placeholder="5000">
+  </div>
+</div>
+
+    <!-- Контейнер для зон -->
+    <div id="zonesContainer" style="display: none;">
+        <div class="zones-header">
+            <h4>Зоны и цены</h4>
+            <button type="button" class="btn-secondary" id="addZoneBtn">
+                <i class="fas fa-plus"></i> Добавить зону
+            </button>
+        </div>
+        
+        <div id="zonesList" class="zones-list">
+            <!-- Зоны будут добавляться здесь -->
+        </div>
+    </div>
+
+    <!-- Общая вместимость -->
+    <div class="form-group">
+        <label for="event-capacity">Общая вместимость</label>
+        <input type="number" id="event-capacity" min="1" required placeholder="100">
+    </div>
+</div>
 
                     <div class="form-section">
                         <h3 class="form-section-title">Изображение</h3>

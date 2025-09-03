@@ -1780,11 +1780,7 @@
                                 <small>Максимально доступно: <span id="maxTickets">0</span> билетов</small>
                             </div>
                             
-                            <label id="ticket-zone-label">Выберите зону:</label>
-<select id="ticket-zone" name="select-zone">
-  <option value="mainzone" data-price="10000">Main Zone | 10.000 тг.</option>
-  <option value="fanzone" data-price="15000">Fan Zone | 15.000 тг.</option>
-</select>
+
 
                             <div class="price-summary">
                                 <h4>Стоимость</h4>
@@ -2104,11 +2100,42 @@ function changeQuantity(delta) {
         
         // Обновление стоимости
         function updatePrice() {
-            const total = currentQuantity * ticketPrice;
-            const amount = currentQuantity;
-            document.getElementById('totalPrice').textContent = `${total} тг.`;
-            document.getElementById('quantitySummary').textContent = `${amount} шт.`;
-        }
+  const zoneSelect = document.getElementById("ticket-zone");
+  const priceEl = document.getElementById("ticketPrice");
+  const quantityEl = document.getElementById("quantitySummary");
+  const totalEl = document.getElementById("totalPrice");
+
+  // Берём цену из выбранной опции
+  const selectedOption = zoneSelect.options[zoneSelect.selectedIndex];
+  const price = parseInt(selectedOption.dataset.price || 0, 10);
+
+  // Обновляем глобальную цену
+  ticketPrice = price;
+
+  // Считаем итог
+  const total = price * currentQuantity;
+
+  // Обновляем интерфейс
+  priceEl.textContent = price.toLocaleString("ru-RU") + " тг.";
+  quantityEl.textContent = currentQuantity + " шт.";
+  totalEl.textContent = total.toLocaleString("ru-RU") + " тг.";
+}
+
+// Изменение количества билетов
+function changeQuantity(delta) {
+  const maxTickets = parseInt(document.getElementById("maxTickets").textContent, 10) || 10;
+  currentQuantity = Math.min(Math.max(1, currentQuantity + delta), maxTickets);
+  document.getElementById("quantity").textContent = currentQuantity;
+  updatePrice();
+}
+
+// Подписка на изменение зоны
+document.addEventListener("DOMContentLoaded", () => {
+  const zoneSelect = document.getElementById("ticket-zone");
+  if (zoneSelect) {
+    zoneSelect.addEventListener("change", updatePrice);
+  }
+});
 
        
         
@@ -2179,7 +2206,7 @@ async function purchaseTickets() {
       console.log('Ошибка', result.message);
     }
   } catch (error) {
-    console.log('Ошибка', 'Не удалось完成 покупку');
+    console.log('Ошибка', 'Не удалось покупку');
   }
 }
 // Обновленная функция покупки билетов

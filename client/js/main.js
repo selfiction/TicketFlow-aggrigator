@@ -20,6 +20,7 @@ async function initApp() {
   
   // Назначение обработчиков событий
   setupEventListeners();
+  setupZonesSystem();
 }
 
 function updateUI() {
@@ -266,6 +267,17 @@ function displayEvents(events) {
       year: 'numeric'
     });
     
+    // Определяем минимальную цену в зависимости от структуры данных
+    let minPrice = 0;
+    
+    if (event.seatingType === 'free' && event.freeSeating) {
+      minPrice = event.freeSeating.price || 0;
+    } else if (event.seatingType === 'zones' && event.zones && event.zones.length > 0) {
+      // Находим минимальную цену среди всех зон
+      const prices = event.zones.map(zone => zone.price).filter(price => price > 0);
+      minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+    }
+    
     const eventCard = document.createElement('div');
     eventCard.className = 'event-card';
     eventCard.innerHTML = `
@@ -276,7 +288,7 @@ function displayEvents(events) {
         <div class="event-date">${eventDate}, ${event.time}</div>
         <h3 class="event-title">${event.title}</h3>
         <div class="event-location">${event.city}, ${event.venue}</div>
-        <div class="event-price">от ${event.price} тг.</div>
+        <div class="event-price">от ${minPrice.toLocaleString('ru-RU')} тг.</div>
         <div class="event-id">ID: ${event.eventId}</div>
         <button class="book-btn" data-event-id="${event.eventId}">
           Купить билет
@@ -586,6 +598,14 @@ async function handleEventCreation(e) {
     openLoginModal();
     return;
   }
+
+  // Получаем выбранный тип рассадки
+  const seatingTypeElement = document.querySelector('input[name="seatingType"]:checked');
+  if (!seatingTypeElement) {
+    notifications.error('Ошибка', 'Выберите тип рассадки');
+    return;
+  }
+  const seatingType = seatingTypeElement.value;
   
   const eventData = {
     title: document.getElementById('event-title').value,
@@ -593,41 +613,77 @@ async function handleEventCreation(e) {
     category: document.getElementById('event-category').value,
     date: document.getElementById('event-date').value,
     time: document.getElementById('event-time').value,
-    endTime: document.getElementById('event-end-time').value,
     venue: document.getElementById('event-venue').value,
     address: document.getElementById('event-address').value,
     city: document.getElementById('event-city').value,
     country: document.getElementById('event-country').value,
-    price: parseInt(document.getElementById('event-price').value),
     capacity: parseInt(document.getElementById('event-capacity').value),
-    image: document.getElementById('event-image').value || ''
+    image: document.getElementById('event-image').value || '',
+    seatingType: seatingType // ✅ ОБЯЗАТЕЛЬНОЕ ПОЛЕ - ДОБАВЛЯЕМ
   };
-  
-  const result = await eventsManager.createEvent(eventData);
-  
-  if (result.success) {
-    notifications.success('Мероприятие создано', 'Ваше мероприятие успешно опубликовано!');
-    document.getElementById('create-event-form').reset();
-    showPage('home-page');
-    await loadEvents();
-  } else {
-    notifications.error('Ошибка', result.message);
+
+  // Добавляем endTime только если оно заполнено
+  const endTime = document.getElementById('event-end-time').value;
+  if (endTime) {
+    eventData.endTime = endTime;
   }
 
-  // В обработчике handleEventCreation добавляем:
-const seatingConfig = document.getElementById('seatingConfig').value;
-if (seatingConfig) {
-  eventData.seatingConfig = JSON.parse(seatingConfig);
-}
+  // Добавляем данные ТОЛЬКО для выбранного типа рассадки
+  if (seatingType === 'zones') {
+    eventData.zones = getZonesData();
+    
+    if (eventData.zones.length === 0) {
+      notifications.error('Ошибка', 'Добавьте хотя бы одну зону для зональной рассадки');
+      return;
+    }
+    
+    // Убеждаемся, что для зональной рассадки нет freeSeating
+    delete eventData.freeSeating;
+    
+  } else if (seatingType === 'free') {
+    // Для свободной рассадки добавляем freeSeating
+    const price = parseInt(document.getElementById('event-price').value) || 0;
+    eventData.freeSeating = { price: price };
+    
+    // Убеждаемся, что для свободной рассадки нет zones
+    delete eventData.zones;
+  }
 
-// И добавляем в форму создание мероприятия скрытое поле
-const form = document.getElementById('create-event-form');
-const seatingConfigInput = document.createElement('input');
-seatingConfigInput.type = 'hidden';
-seatingConfigInput.id = 'seatingConfig';
-seatingConfigInput.name = 'seatingConfig';
-form.appendChild(seatingConfigInput);
+  console.log('Отправляемые данные на сервер:', JSON.stringify(eventData, null, 2));
+
+  try {
+    const response = await fetch('/api/events', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${auth.token}`
+      },
+      body: JSON.stringify(eventData)
+    });
+
+    const result = await response.json();
+    
+    if (result.status === 'success') {
+      notifications.success('Мероприятие создано', 'Ваше мероприятие успешно опубликовано!');
+      document.getElementById('create-event-form').reset();
+      showPage('home-page');
+      await loadEvents();
+    } else {
+      notifications.error('Ошибка', result.message || 'Не удалось создать мероприятие');
+    }
+  } catch (error) {
+    console.error('Ошибка при создании мероприятия:', error);
+    notifications.error('Ошибка', 'Не удалось создать мероприятие');
+  }
 }
+// // И добавляем в форму создание мероприятия скрытое поле
+// const form = document.getElementById('create-event-form');
+// const seatingConfigInput = document.createElement('input');
+// seatingConfigInput.type = 'hidden';
+// seatingConfigInput.id = 'seatingConfig';
+// seatingConfigInput.name = 'seatingConfig';
+// form.appendChild(seatingConfigInput);
+
 
 function handleLogout(e) {
   e.preventDefault();
@@ -742,3 +798,159 @@ function showPage(pageId) {
   
 }
 
+// Добавление новой зоны
+function addNewZone() {
+    const zonesList = document.getElementById('zonesList');
+    const zoneId = Date.now();
+    
+    const zoneHtml = `
+        <div class="zone-item" data-zone-id="${zoneId}">
+            <div class="zone-header">
+                <h5>Зона ${document.querySelectorAll('.zone-item').length + 1}</h5>
+                <div class="zone-controls">
+                    <button type="button" class="btn-danger" onclick="removeZone(${zoneId})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="zone-content">
+                <div class="form-group">
+                    <label>Название зоны</label>
+                    <input type="text" class="zone-name" placeholder="Партер, Балкон и т.д." 
+                           oninput="updateZoneTotal(${zoneId})">
+                </div>
+                <div class="form-group">
+                    <label>Цена билета (тг.)</label>
+                    <input type="number" class="zone-price" min="0" placeholder="5000" 
+                           oninput="updateZoneTotal(${zoneId})">
+                </div>
+                <div class="form-group">
+                    <label>Количество мест</label>
+                    <input type="number" class="zone-capacity" min="1" placeholder="50" 
+                           oninput="updateZoneTotal(${zoneId})">
+                </div>
+                <div class="form-group">
+                    <label>Рядов (опционально)</label>
+                    <input type="number" class="zone-rows" min="1" placeholder="5">
+                </div>
+                <div class="zone-total" id="zoneTotal-${zoneId}">
+                    Всего: 0 мест × 0 тг. = 0 тг.
+                </div>
+            </div>
+        </div>
+    `;
+    
+    zonesList.insertAdjacentHTML('beforeend', zoneHtml);
+    updateTotalCapacity();
+}
+
+// Управление системой зон
+function setupZonesSystem() {
+    const seatingTypeRadios = document.querySelectorAll('input[name="seatingType"]');
+    const zonesContainer = document.getElementById('zonesContainer');
+    const freeSeatingSection = document.getElementById('freeSeatingSection');
+    const seatingTypeInput = document.getElementById('seatingTypeInput');
+    
+    seatingTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            const isZones = this.value === 'zones';
+            const isFree = this.value === 'free';
+            
+            zonesContainer.style.display = isZones ? 'block' : 'none';
+            freeSeatingSection.style.display = isFree ? 'block' : 'none';
+            
+            // Обновляем hidden input
+            if (seatingTypeInput) {
+                seatingTypeInput.value = this.value;
+            }
+            
+            // Очищаем ненужные данные
+            if (isFree) {
+                document.getElementById('zonesList').innerHTML = '';
+            }
+            if (isZones) {
+                document.getElementById('event-price').value = '';
+            }
+            
+            updateTotalCapacity();
+        });
+    });
+    
+    // Инициализация
+    if (seatingTypeRadios.length > 0) {
+        const initialType = document.querySelector('input[name="seatingType"]:checked').value;
+        if (seatingTypeInput) {
+            seatingTypeInput.value = initialType;
+        }
+    }
+    addZoneBtn.addEventListener('click', addNewZone);
+    updateTotalCapacity();
+
+}
+
+// Удаление зоны
+function removeZone(zoneId) {
+    const zoneElement = document.querySelector(`[data-zone-id="${zoneId}"]`);
+    if (zoneElement && confirm('Удалить эту зону?')) {
+        zoneElement.remove();
+        updateTotalCapacity();
+        renumberZones();
+    }
+}
+
+// Обновление итогов по зоне
+function updateZoneTotal(zoneId) {
+    const zoneElement = document.querySelector(`[data-zone-id="${zoneId}"]`);
+    const price = parseInt(zoneElement.querySelector('.zone-price').value) || 0;
+    const capacity = parseInt(zoneElement.querySelector('.zone-capacity').value) || 0;
+    const total = price * capacity;
+    
+    const totalElement = document.getElementById(`zoneTotal-${zoneId}`);
+    totalElement.textContent = `Всего: ${capacity} мест × ${price} тг. = ${total.toLocaleString()} тг.`;
+    
+    updateTotalCapacity();
+
+}
+
+// Обновление общей вместимости
+function updateTotalCapacity() {
+    const zoneCapacities = Array.from(document.querySelectorAll('.zone-capacity'))
+        .map(input => parseInt(input.value) || 0);
+    
+    const totalCapacity = zoneCapacities.reduce((sum, cap) => sum + cap, 0);
+    document.getElementById('event-capacity').value = totalCapacity;
+}
+
+// Перенумерация зон
+function renumberZones() {
+    document.querySelectorAll('.zone-item').forEach((zone, index) => {
+        const title = zone.querySelector('h5');
+        if (title) {
+            title.textContent = `Зона ${index + 1}`;
+        }
+    });
+}
+
+// Получение данных зон для отправки
+function getZonesData() {
+    const zones = [];
+    
+    document.querySelectorAll('.zone-item').forEach(zone => {
+        const name = zone.querySelector('.zone-name').value;
+        const price = parseInt(zone.querySelector('.zone-price').value);
+        const capacity = parseInt(zone.querySelector('.zone-capacity').value);
+        const rowsInput = zone.querySelector('.zone-rows');
+        const rows = rowsInput ? parseInt(rowsInput.value) : null;
+        
+        if (name && !isNaN(price) && !isNaN(capacity)) {
+            zones.push({
+                name: name,
+                price: price,
+                capacity: capacity,
+                rows: isNaN(rows) ? null : rows
+            });
+        }
+    });
+    
+    return zones;
+}

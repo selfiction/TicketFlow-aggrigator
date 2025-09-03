@@ -236,6 +236,7 @@ try {
 // });
 
 // Модель мероприятия
+// Модель мероприятия
 const EventSchema = new mongoose.Schema({
   eventId: {
     type: String,
@@ -283,11 +284,6 @@ const EventSchema = new mongoose.Schema({
     type: String,
     default: 'Казахстан'
   },
-  price: {
-    type: Number,
-    required: true,
-    min: 0
-  },
   capacity: {
     type: Number,
     required: true,
@@ -306,12 +302,32 @@ const EventSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  // Добавляем конфигурацию seating
-  seatingConfig: {
-    type: {
+  // ДОБАВЛЯЕМ ПОЛЯ ДЛЯ ЗОНАЛЬНОЙ РАССАДКИ В КОРЕНЬ
+  seatingType: {
+    type: String,
+    enum: ['free', 'zones'],
+    default: 'free'
+  },
+  freeSeating: {
+    price: {
+      type: Number,
+      default: 0
+    }
+  },
+  zones: [{
+    name: {
       type: String,
-      enum: ['free', 'reserved'],
-      default: 'free'
+      required: true
+    },
+    price: {
+      type: Number,
+      required: true,
+      min: 0
+    },
+    capacity: {
+      type: Number,
+      required: true,
+      min: 1
     },
     rows: {
       type: Number,
@@ -321,29 +337,11 @@ const EventSchema = new mongoose.Schema({
       type: Number,
       default: 0
     },
-    sections: [{
-      name: {
-        type: String,
-        required: true
-      },
-      rows: {
-        type: Number,
-        required: true
-      },
-      seatsPerRow: {
-        type: Number,
-        required: true
-      },
-      price: {
-        type: Number,
-        required: true
-      },
-      color: {
-        type: String,
-        default: '#3a86ff'
-      }
-    }]
-  }
+    color: {
+      type: String,
+      default: '#3a86ff'
+    }
+  }]
 });
 
 // Добавляем индекс для быстрого поиска по eventId
@@ -373,7 +371,7 @@ async function createStripePayment(payment, event, user) {
       line_items: [
         {
           price_data: {
-            currency: 'rub',
+            currency: 'kzt',
             product_data: {
               name: `Билеты на "${event.title}"`,
               description: `Количество: ${payment.metadata.quantity}`,
@@ -509,6 +507,10 @@ const TicketSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  zone: {
+    type: String,
+    default: 'free'
+  },
   qrCode: {
     type: String,
     default: ''
@@ -517,9 +519,9 @@ const TicketSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
-  seatRow: { type: Number },      // уберите required
-  seatNumber: { type: Number },   // уберите required
-  section: { type: String }       // уберите required
+  seatRow: { type: Number },
+  seatNumber: { type: Number },
+  section: { type: String }
 });
 
 // Добавляем метод для проверки занятости места
@@ -1921,6 +1923,7 @@ app.get('/api/events', async (req, res) => {
 });
 
 // Создание мероприятия
+// Создание мероприятия
 app.post('/api/events', authenticateToken, async (req, res) => {
   try {
     const eventData = {
@@ -1931,12 +1934,60 @@ app.post('/api/events', authenticateToken, async (req, res) => {
     // Валидация обязательных полей
     if (!eventData.title || !eventData.description || !eventData.category || 
         !eventData.date || !eventData.time || !eventData.venue || 
-        !eventData.address || !eventData.city || !eventData.price || 
-        !eventData.capacity) {
+        !eventData.address || !eventData.city || !eventData.capacity) {
       return res.status(400).json({
         status: 'error',
         message: 'Заполните все обязательные поля'
       });
+    }
+    
+    // Валидация для зональной системы
+    if (eventData.seatingType === 'zones') {
+      if (!eventData.zones || eventData.zones.length === 0) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Добавьте хотя бы одну зону для зональной рассадки'
+        });
+      }
+      
+      // Проверяем каждую зону
+      for (const zone of eventData.zones) {
+        if (!zone.name || zone.price === undefined || zone.capacity === undefined) {
+          return res.status(400).json({
+            status: 'error',
+            message: 'Заполните все поля для каждой зоны'
+          });
+        }
+        
+        if (zone.price < 0) {
+          return res.status(400).json({
+            status: 'error',
+            message: `Цена в зоне "${zone.name}" не может быть отрицательной`
+          });
+        }
+        
+        if (zone.capacity < 1) {
+          return res.status(400).json({
+            status: 'error',
+            message: `Вместимость в зоне "${zone.name}" должна быть положительной`
+          });
+        }
+      }
+    } else {
+      // Для свободной рассадки проверяем цену
+      if (!eventData.freeSeating || eventData.freeSeating.price === undefined) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Укажите цену для свободной рассадки'
+        });
+      }
+      
+      if (eventData.freeSeating.price < 0) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Цена не может быть отрицательной'
+        });
+      }
     }
     
     // Преобразование даты в объект Date
@@ -1947,14 +1998,6 @@ app.post('/api/events', authenticateToken, async (req, res) => {
       return res.status(400).json({
         status: 'error',
         message: 'Дата мероприятия не может быть в прошлом'
-      });
-    }
-    
-    // Проверка, что цена и количество положительные числа
-    if (eventData.price < 0 || eventData.capacity < 1) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Цена и количество билетов должны быть положительными числами'
       });
     }
     
@@ -2023,13 +2066,11 @@ app.get('/api/events/popular', async (req, res) => {
 
 
 // Покупка билета
-// Оставьте только этот вариант:
-// В server.js добавляем endpoint для покупки билетов
 app.post('/api/tickets/purchase', authenticateToken, async (req, res) => {
     try {
         console.log('Получен запрос на покупку билетов:', req.body);
         
-        const { eventId, quantity = 1, selectedSeats = [] } = req.body;
+        const { eventId, quantity = 1, selectedSeats = [], zoneName } = req.body;
 
         // Проверяем обязательные поля
         if (!eventId) {
@@ -2056,6 +2097,27 @@ app.post('/api/tickets/purchase', authenticateToken, async (req, res) => {
             });
         }
 
+        let ticketPrice = 0;
+        
+        // Определяем цену в зависимости от типа рассадки
+        if (event.seatingConfig.type === 'free') {
+            ticketPrice = event.seatingConfig.freeSeating.price;
+        } else if (event.seatingConfig.type === 'zones' && zoneName) {
+            const zone = event.seatingConfig.zones.find(z => z.name === zoneName);
+            if (!zone) {
+                return res.status(400).json({
+                    status: 'error',
+                    message: 'Указанная зона не найдена'
+                });
+            }
+            ticketPrice = zone.price;
+        } else {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Для зональной рассадки необходимо указать зону'
+            });
+        }
+
         // Проверяем доступность билетов
         const ticketsSold = await Ticket.countDocuments({ event: eventId });
         const availableTickets = event.capacity - ticketsSold;
@@ -2067,26 +2129,6 @@ app.post('/api/tickets/purchase', authenticateToken, async (req, res) => {
             });
         }
 
-        // Для reserved seating проверяем выбранные места
-        if (event.seatingConfig && event.seatingConfig.type === 'reserved' && selectedSeats.length > 0) {
-            for (const seat of selectedSeats) {
-                const isTaken = await Ticket.findOne({
-                    event: eventId,
-                    section: seat.section,
-                    seatRow: seat.row,
-                    seatNumber: seat.number,
-                    status: { $in: ['Активен', 'Забронирован'] }
-                });
-
-                if (isTaken) {
-                    return res.status(400).json({
-                        status: 'error',
-                        message: `Место ${seat.section}, Ряд ${seat.row}, Место ${seat.number} уже занято`
-                    });
-                }
-            }
-        }
-
         // Создаем билеты
         const tickets = [];
         for (let i = 0; i < quantity; i++) {
@@ -2096,21 +2138,11 @@ app.post('/api/tickets/purchase', authenticateToken, async (req, res) => {
                 code: ticketCode,
                 event: eventId,
                 user: req.user._id,
-                price: event.price,
+                price: ticketPrice,
                 status: 'Активен',
-                purchaseDate: new Date()
+                purchaseDate: new Date(),
+                zone: zoneName || 'free'
             };
-
-            // Добавляем информацию о месте для reserved seating
-            if (event.seatingConfig && event.seatingConfig.type === 'reserved' && selectedSeats[i]) {
-                const seat = selectedSeats[i];
-                ticketData.section = seat.section;
-                ticketData.seatRow = seat.row;
-                ticketData.seatNumber = seat.number;
-                ticketData.seat = `${seat.section}, Ряд ${seat.row}, Место ${seat.number}`;
-            } else {
-                ticketData.seat = `Ряд ${Math.floor(Math.random() * 10) + 1}, Место ${Math.floor(Math.random() * 50) + 1}`;
-            }
 
             const ticket = await Ticket.create(ticketData);
             await ticket.populate('event', 'title date time venue');
@@ -2896,27 +2928,27 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'client', 'index.html'));
 });
 
-const options = {
-  key: fs.readFileSync("/etc/letsencrypt/live/ticketflow.kz/fullchain.pem"),   // приватный
-  cert: fs.readFileSync("/etc/letsencrypt/live/ticketflow.kz/privkey.pem") // сертификат SLL
-};
-
 // const options = {
-//   key: fs.readFileSync("server.key"),   // приватный
-//   cert: fs.readFileSync("server.crt") // сертификат SLL
+//   key: fs.readFileSync("/etc/letsencrypt/live/ticketflow.kz/fullchain.pem"),   // приватный
+//   cert: fs.readFileSync("/etc/letsencrypt/live/ticketflow.kz/privkey.pem") // сертификат SLL
 // };
 
-//Запуск сервера
-app.listen(PORT, () => {
-  console.log(`Сервер запущен на порту ${PORT}`);
-  console.log(`Откройте http://localhost:${PORT} в браузере`);
-});
+const options = {
+  key: fs.readFileSync("server.key"),   // приватный
+  cert: fs.readFileSync("server.crt") // сертификат SLL
+};
 
-// https.createServer(options, app).listen(3000, () => {
-  
-//   os.hostname();
-//   console.log("HTTPS сервер запущен: https://localhost:3000");
+// //Запуск сервера
+// app.listen(PORT, () => {
+//   console.log(`Сервер запущен на порту ${PORT}`);
+//   console.log(`Откройте http://localhost:${PORT} в браузере`);
 // });
+
+https.createServer(options, app).listen(3000, () => {
+  
+  os.hostname();
+  console.log("HTTPS сервер запущен: https://localhost:3000");
+});
 
 // Graceful shutdown
 process.on('SIGINT', async () => {

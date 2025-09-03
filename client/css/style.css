@@ -2123,3 +2123,90 @@
   }
 }
 
+/* Стили для radio buttons */
+.seating-type-toggle {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 12px 20px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.radio-option:hover {
+    border-color: #3a86ff;
+    background: #f8f9ff;
+}
+
+.radio-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.radio-checkmark {
+    position: relative;
+    height: 20px;
+    width: 20px;
+    background-color: #fff;
+    border: 2px solid #ddd;
+    border-radius: 50%;
+    margin-right: 12px;
+    transition: all 0.3s ease;
+}
+
+.radio-option input[type="radio"]:checked ~ .radio-checkmark {
+    background-color: #3a86ff;
+    border-color: #3a86ff;
+}
+
+.radio-checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.radio-option input[type="radio"]:checked ~ .radio-checkmark:after {
+    display: block;
+}
+
+.radio-checkmark:after {
+    top: 4px;
+    left: 4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: white;
+}
+
+.radio-option input[type="radio"]:checked ~ .radio-checkmark:after {
+    display: block;
+}
+
+.radio-option input[type="radio"]:checked {
+    border-color: #3a86ff;
+    background: #3a86ff;
+    color: white;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .seating-type-toggle {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .radio-option {
+        width: 100%;
+    }
+}
+
