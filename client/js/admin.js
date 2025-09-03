@@ -77,7 +77,7 @@ class AdminPanel {
     displayStats(stats) {
         document.getElementById('statEvents').textContent = stats.totalEvents;
         document.getElementById('statTickets').textContent = stats.totalTickets;
-        document.getElementById('statRevenue').textContent = `${stats.totalRevenue} руб.`;
+        document.getElementById('statRevenue').textContent = `${stats.totalRevenue} тг.`;
         document.getElementById('statUsers').textContent = stats.totalUsers;
     }
 
@@ -118,7 +118,7 @@ class AdminPanel {
                     <td>${event.title}</td>
                     <td>${date} ${event.time}</td>
                     <td>${event.venue}, ${event.city}</td>
-                    <td>${event.price} руб.</td>
+                    <td>${event.price} тг.</td>
                     <td>${ticketsSold}/${event.capacity}</td>
                     <td>${event.createdBy?.name || 'Неизвестно'}</td>
                     <td>
@@ -169,7 +169,7 @@ class AdminPanel {
                     <td>${ticket.code}</td>
                     <td>${ticket.event?.title || 'N/A'} (${eventDate})</td>
                     <td>${ticket.user?.name || 'N/A'}<br><small>${ticket.user?.email || ''}</small></td>
-                    <td>${ticket.price} руб.</td>
+                    <td>${ticket.price} тг.</td>
                     <td>
                         <span class="status-badge status-${ticket.status.toLowerCase()}">
                             ${ticket.status}

@@ -145,7 +145,7 @@ function displayTickets(tickets) {
         <p><i class="fas fa-calendar"></i> ${eventDate} в ${ticket.event.time}</p>
         <p><i class="fas fa-map-marker-alt"></i> ${ticket.event.venue}, ${ticket.event.city}</p>
         <p><i class="fas fa-chair"></i> ${ticket.seat}</p>
-        <p><i class="fas fa-ruble-sign"></i> ${ticket.price} руб.</p>
+        <p><i class="fas fa-ruble-sign"></i> ${ticket.price} тг.</p>
         
         ${ticket.qrCode ? `
           <div class="ticket-qr">
@@ -235,7 +235,7 @@ function displayTickets(tickets) {
                     </div>
                     
                     <div class="ticket-price">
-                        ${ticket.price || 0} руб.
+                        ${ticket.price || 0} тг.
                     </div>
                 </div>
                 
@@ -562,7 +562,7 @@ function showPurchaseSuccessModal(tickets) {
                 <p><strong>Дата:</strong> ${eventDate} в ${ticket.event.time}</p>
                 <p><strong>Место:</strong> ${ticket.event.venue}, ${ticket.event.city}</p>
                 <p><strong>Место:</strong> ${ticket.seat}</p>
-                <p><strong>Цена:</strong> ${ticket.price} руб.</p>
+                <p><strong>Цена:</strong> ${ticket.price} тг.</p>
                 <p><strong>Куплен:</strong> ${purchaseDate}</p>
             </div>
             

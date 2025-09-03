@@ -276,7 +276,7 @@ function displayEvents(events) {
         <div class="event-date">${eventDate}, ${event.time}</div>
         <h3 class="event-title">${event.title}</h3>
         <div class="event-location">${event.city}, ${event.venue}</div>
-        <div class="event-price">от ${event.price} руб.</div>
+        <div class="event-price">от ${event.price} тг.</div>
         <div class="event-id">ID: ${event.eventId}</div>
         <button class="book-btn" data-event-id="${event.eventId}">
           Купить билет
