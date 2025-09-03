@@ -739,5 +739,6 @@ function showPage(pageId) {
   
   closeUserDropdown();
   window.scrollTo(0, 0);
+  
 }
 

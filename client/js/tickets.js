@@ -536,17 +536,6 @@ async function purchaseTickets() {
 
 // WORKING VARIANT IS BELOW
 
-// Функция для кнопки покупки 
-window.buyTickets = async function(eventId) {
-  const quantity = parseInt(prompt('Сколько билетов хотите купить?', '1') || '1');
-  if (isNaN(quantity) || quantity < 1) {
-    alert('Введите корректное количество билетов');
-    return;
-  }
-
-  await purchaseTickets(eventId, quantity);
-};
-
 // Функция показа модального окна с купленными билетами
 function showPurchaseSuccessModal(tickets) {
     const modal = document.getElementById('seatingVisualizationSection');

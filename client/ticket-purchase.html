@@ -1819,9 +1819,7 @@
                                 Купить билеты
                             </button>
 
-                            <button class="book-btn" onclick="buyTickets('{{event._id}}')">
-  Купить билет | STRIPE
-</button>
+                       
                            
                             
                             <div class="ticket-notice">
@@ -1837,32 +1835,6 @@
                 </div>
             </div>
                                     <!-- Добавляем после формы покупки -->
-<!-- Заменяем сложную структуру на простую -->
-<div class="form-section">
-    <h3 class="form-section-title">Выбор мест</h3>
-    
-    <div class="seating-visualization-simple">
-        <div class="visualization-header">
-            <div class="hall-stage">СЦЕНА</div>
-                <div class="legend-simple">
-                <span class="legend-item"><span class="color-dot free-dot"></span> Свободно</span>
-                <span class="legend-item"><span class="color-dot taken-dot"></span> Занято</span>
-                <span class="legend-item"><span class="color-dot selected-dot"></span> Выбрано</span>
-                </div>
-             </div>
-        
-                <div id="simpleHallLayout" class="simple-hall-layout">
-
-                </div>
-        
-                    <div class="selection-info-simple">
-                        <p>Выбрано: <strong id="selectedCount">0</strong> из <strong id="requiredCount">1</strong> мест</p>
-                        <button class="btn-small" onclick="clearSimpleSelection()">Очистить</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
 <!-- Модальное окно успешной покупки -->
 <div class="modal-overlay" id="purchaseSuccessModal">
   <div class="tickets-modal">
@@ -2027,6 +1999,7 @@ async function initPage() {
   
   // Обновляем стоимость
   updatePrice();
+
 }
 
 // Закрытие модального окна по клику вне области
@@ -2114,7 +2087,6 @@ function changeQuantity(delta) {
     if (newQuantity >= 1 && newQuantity <= maxTickets) {
         currentQuantity = newQuantity;
         document.getElementById('quantity').textContent = currentQuantity;
-        document.getElementById('requiredCount').textContent = currentQuantity;
         updatePrice();
         
         // Если превысили лимит выбора - очищаем лишнее
@@ -2123,15 +2095,18 @@ function changeQuantity(delta) {
             initSimpleHall();
         }
         
-        updateSimpleSelectionInfo();
     }
 }
         
         // Обновление стоимости
         function updatePrice() {
             const total = currentQuantity * ticketPrice;
+            const amount = currentQuantity;
             document.getElementById('totalPrice').textContent = `${total} тг.`;
+            document.getElementById('quantitySummary').textContent = `${amount} шт.`;
         }
+
+       
         
         // Обновление интерфейса покупки
         function updatePurchaseUI() {
@@ -2162,7 +2137,7 @@ function changeQuantity(delta) {
             
             if (isAuthenticated && hasTickets && currentQuantity > 0) {
                 purchaseButton.disabled = false;
-                purchaseButton.textContent = `Купить ${currentQuantity} билет${getPluralEnding(currentQuantity)}`;
+                purchaseButton.textContent = `Купить билет`;
             } else {
                 purchaseButton.disabled = true;
             }
@@ -3247,10 +3222,7 @@ function selectSimpleSeat(section, row, number) {
     updateSimpleSelectionInfo();
 }
 
-// Обновление информации о выборе
-function updateSimpleSelectionInfo() {
-    document.getElementById('selectedCount').textContent = selectedSeats.length;
-}
+
 
 
 // Очистка выбора
