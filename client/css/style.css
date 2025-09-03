@@ -571,7 +571,7 @@
         
         .auth-modal {
             background: white;
-            border-radius: 10px;
+            border-radius: 15px;
             width: 100%;
             max-width: 450px;
             box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
