@@ -3499,7 +3499,6 @@ let currentPrintTickets = [];
 
 async function downloadAsPDF() {
   try {
-    showLoading('Генерация PDF...');
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({
