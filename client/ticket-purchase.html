@@ -1970,9 +1970,9 @@
                 <div class="footer-column">
                     <h3>Контакты</h3>
                     <ul>
-                        <li>Телефон: +7 (800) 123-45-67</li>
+                        <li>Телефон: +7 (747) 408 6911</li>
                         <li>Email: info@fullhouse.kz</li>
-                        <li>Адрес: Москва, ул. Примерная, д. 10</li>
+                        <li>Адрес: Актобе, ул. Абылхаир-хана, д. 52а</li>
                     </ul>
                 </div>
                 <div class="footer-column">
@@ -3387,9 +3387,12 @@ async function createPrintTicketElement(ticket) {
       </div>
     </div>
     
-    <div class="print-ticket-qr" id="print-qr-${ticket.code}">
-      <div class="qr-loading">Генерация QR-кода...</div>
-    </div>
+     ${ticket.qrCode ? `
+              <div class="ticket-qr">
+                <img src="${ticket.qrCode}" alt="QR-код билета" style="max-width: 120px;">
+                <p class="qr-hint">Покажите этот QR-код на входе</p>
+              </div>
+            ` : ''}
     
     <div class="print-ticket-footer">
       Предъявите этот билет на входе. Билет действителен только при предъявлении QR-кода.
