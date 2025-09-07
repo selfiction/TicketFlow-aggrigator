@@ -1779,6 +1779,77 @@ app.get('/my-tickets', async (req, res) => {
   }
 });
 
+app.get('/api/events/:id/zones', async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    
+    // Проверяем валидность ID
+    if (!mongoose.Types.ObjectId.isValid(eventId)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Неверный формат ID мероприятия'
+      });
+    }
+
+    // Находим мероприятие
+    const event = await Event.findById(eventId);
+    
+    if (!event) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Мероприятие не найдено'
+      });
+    }
+
+    // Если мероприятие имеет свободную рассадку, возвращаем пустой массив зон
+    if (event.seatingType === 'free') {
+      return res.status(200).json({
+        status: 'success',
+        seatingType: event.seatingType,
+        freeSeating: event.freeSeating,
+        zones: []
+      });
+    }
+
+    // Для зональной рассадки получаем информацию о занятых местах
+    const zonesWithOccupancy = await Promise.all(
+      event.zones.map(async (zone) => {
+        const ticketsSold = await Ticket.countDocuments({
+          event: eventId,
+          zone: zone.name,
+          status: { $in: ['Активен', 'Забронирован'] }
+        });
+        
+        return {
+          _id: zone._id || zone.name,
+          name: zone.name,
+          price: zone.price,
+          capacity: zone.capacity,
+          rows: zone.rows,
+          seatsPerRow: zone.seatsPerRow,
+          color: zone.color,
+          ticketsSold: ticketsSold,
+          ticketsAvailable: zone.capacity - ticketsSold
+        };
+      })
+    );
+
+    res.status(200).json({
+      status: 'success',
+      seatingType: event.seatingType,
+      freeSeating: event.freeSeating,
+      zones: zonesWithOccupancy
+    });
+
+  } catch (error) {
+    console.error('Ошибка при получении зон мероприятия:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Ошибка сервера при получении информации о зонах'
+    });
+  }
+});
+
 // Маршруты для работы с профилем пользователя
 app.get('/api/user/profile', authenticateToken, async (req, res) => {
   try {
@@ -2065,18 +2136,18 @@ app.get('/api/events/popular', async (req, res) => {
 });
 
 
-// Покупка билета
+// Покупка билета - ОБНОВИТЕ ЭТОТ МАРШРУТ
 app.post('/api/tickets/purchase', authenticateToken, async (req, res) => {
     try {
         console.log('Получен запрос на покупку билетов:', req.body);
         
-        const { eventId, quantity = 1, selectedSeats = [], zoneName } = req.body;
+        const { eventId, quantity = 1, zoneId, zoneName } = req.body;
 
         // Проверяем обязательные поля
         if (!eventId) {
             return res.status(400).json({
                 status: 'error',
-                message: 'ID мероприятия обязателен'
+                message: 'ID мероприятия обязательно'
             });
         }
 
@@ -2097,13 +2168,17 @@ app.post('/api/tickets/purchase', authenticateToken, async (req, res) => {
             });
         }
 
+        // Определяем цену в зависимости от типа рассадки и зоны
         let ticketPrice = 0;
         
-        // Определяем цену в зависимости от типа рассадки
-        if (event.seatingConfig.type === 'free') {
-            ticketPrice = event.seatingConfig.freeSeating.price;
-        } else if (event.seatingConfig.type === 'zones' && zoneName) {
-            const zone = event.seatingConfig.zones.find(z => z.name === zoneName);
+        if (event.seatingType === 'free') {
+            ticketPrice = event.freeSeating.price;
+        } else if (event.seatingType === 'zones' && zoneId) {
+            // Находим зону по ID или имени
+            const zone = event.zones.find(z => 
+                z._id.toString() === zoneId || z.name === zoneName
+            );
+            
             if (!zone) {
                 return res.status(400).json({
                     status: 'error',
@@ -2143,6 +2218,17 @@ app.post('/api/tickets/purchase', authenticateToken, async (req, res) => {
                 purchaseDate: new Date(),
                 zone: zoneName || 'free'
             };
+
+            // Если есть зональная рассадка с указанием мест
+            if (event.seatingType === 'zones' && zoneName) {
+                const zone = event.zones.find(z => z.name === zoneName);
+                if (zone && zone.rows > 0 && zone.seatsPerRow > 0) {
+                    // Здесь можно добавить логику выбора конкретного места
+                    ticketData.section = zoneName;
+                    // ticketData.seatRow = ...;
+                    // ticketData.seatNumber = ...;
+                }
+            }
 
             const ticket = await Ticket.create(ticketData);
             await ticket.populate('event', 'title date time venue');
@@ -2922,6 +3008,10 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage });
+
+// Получение зон мероприятия
+// Получение зон мероприятия
+
 
 // Маршрут для главной страницы
 app.get('/', (req, res) => {

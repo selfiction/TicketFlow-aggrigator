@@ -1695,6 +1695,7 @@
     </style>
 </head>
 <body>
+  <script src="/js/tickets.js"></script>
     <!-- Header -->
     <header>
         <div class="container">
@@ -1769,16 +1770,24 @@
                         <!-- Правая колонка - Форма покупки -->
                         <div class="ticket-form-card">
                             <h3>Данные для покупки</h3>
-                            
+                          
+
                             <div class="form-group">
-                                <label>Количество билетов</label>
-                                <div class="quantity-control">
-                                    <button class="quantity-btn" onclick="changeQuantity(-1)">-</button>
-                                    <span class="quantity-display" id="quantity">1</span>
-                                    <button class="quantity-btn" onclick="changeQuantity(1)">+</button>
-                                </div>
-                                <small>Максимально доступно: <span id="maxTickets">0</span> билетов</small>
-                            </div>
+    <label>Выберите зону</label>
+    <select id="ticket-zone" class="form-control">
+        <option value="">-- Загрузка зон... --</option>
+    </select>
+</div>
+
+<div class="form-group">
+    <label>Количество билетов</label>
+    <div class="quantity-control">
+        <button class="quantity-btn" onclick="changeQuantity(-1)">-</button>
+        <span class="quantity-display" id="quantity">1</span>
+        <button class="quantity-btn" onclick="changeQuantity(1)">+</button>
+    </div>
+    <small>Максимально доступно в выбранной зоне: <span id="maxTickets">0</span> билетов</small>
+</div>
                             
 
 
@@ -1909,6 +1918,28 @@
     <footer class="print-footer">
       <p>Билеты сгенерированы: <span id="printGenerationDate"></span></p>
       <p>При возникновении вопросов обращайтесь в поддержку: support@fullhouse.kz</p>
+        <div class="warning">
+                <p>Вход на мероприятие возможен только один раз и по одному билету.</p>
+                <p>При покупке электронных билетов у третьих лиц, билеты недействительны.</p>
+                <p>Не допускайте копирования электронного билета.</p>
+            </div>
+            
+            <div class="terms">
+                <h3>Условия использования билета:</h3>
+                <ol>
+                    <li>Настоящий электронный билет является документом, подтверждающим ваше право на посещение указанного мероприятия. Пожалуйста, храните его в безопасности и не передавайте его посторонним лицам и не публикуйте фотографии с видимым штрих-кодом билета в социальных сетях.</li>
+                    <li>Электронный билет является действительным на одного предъявителя.</li>
+                    <li>Электронный билет распечатывать не обязательно.</li>
+                    <li>При посещении мероприятия вы обязаны соблюдать все правила и положения, установленные организатором мероприятия и местом проведения. Это включает в себя соблюдение правил безопасности, запрет на пронос алкоголя и наркотиков, а также запрет на насилие, дискриминацию и любое другое неприемлемое поведение.</li>
+                    <li>Организатор мероприятия оставляет за собой право внести изменения в программу, дату, время или место проведения мероприятия без предварительного уведомления.</li>
+                </ol>
+                
+                <div class="contact-info">
+                    <p>Для получения консультации по любым вопросам включая возврат билетов просим обращаться в поддержку клиентов:</p>
+                    <p>+7 (727) 225-10-50, +7 (717) 247-63-50, +7 (771) 936-53-53</p>
+                    <p>help@ticketon.kz</p>
+                </div>
+            </div>
     </footer>
   </div>
 </div>
@@ -2099,34 +2130,33 @@ function changeQuantity(delta) {
 }
         
         // Обновление стоимости
-        function updatePrice() {
-  const zoneSelect = document.getElementById("ticket-zone");
-  const priceEl = document.getElementById("ticketPrice");
-  const quantityEl = document.getElementById("quantitySummary");
-  const totalEl = document.getElementById("totalPrice");
+        // Обновите функцию обновления цены
+// Обновите функцию обновления цены
+// Обновите функцию обновления цены
+function updatePrice() {
+    const zoneSelect = document.getElementById("ticket-zone");
+    const priceEl = document.getElementById("ticketPrice");
+    const quantityEl = document.getElementById("quantitySummary");
+    const totalEl = document.getElementById("totalPrice");
 
-  // Берём цену из выбранной опции
-  const selectedOption = zoneSelect.options[zoneSelect.selectedIndex];
-  const price = parseInt(selectedOption.dataset.price || 0, 10);
+    if (!zoneSelect || zoneSelect.value === "") {
+        // Если зона не выбрана, используем цену из мероприятия
+        ticketPrice = currentEvent.price || 0;
+    } else {
+        // Берём цену из выбранной опции
+        const selectedOption = zoneSelect.options[zoneSelect.selectedIndex];
+        ticketPrice = parseInt(selectedOption.dataset.price || currentEvent.price || 0, 10);
+    }
 
-  // Обновляем глобальную цену
-  ticketPrice = price;
+    // Считаем итог
+    const total = ticketPrice * currentQuantity;
 
-  // Считаем итог
-  const total = price * currentQuantity;
-
-  // Обновляем интерфейс
-  priceEl.textContent = price.toLocaleString("ru-RU") + " тг.";
-  quantityEl.textContent = currentQuantity + " шт.";
-  totalEl.textContent = total.toLocaleString("ru-RU") + " тг.";
-}
-
-// Изменение количества билетов
-function changeQuantity(delta) {
-  const maxTickets = parseInt(document.getElementById("maxTickets").textContent, 10) || 10;
-  currentQuantity = Math.min(Math.max(1, currentQuantity + delta), maxTickets);
-  document.getElementById("quantity").textContent = currentQuantity;
-  updatePrice();
+    // Обновляем интерфейс
+    priceEl.textContent = ticketPrice.toLocaleString("ru-RU") + " тг.";
+    quantityEl.textContent = currentQuantity + " шт.";
+    totalEl.textContent = total.toLocaleString("ru-RU") + " тг.";
+    
+    console.log('Цена обновлена:', ticketPrice, 'Итого:', total);
 }
 
 // Подписка на изменение зоны
@@ -2176,136 +2206,7 @@ document.addEventListener("DOMContentLoaded", () => {
         
         // Покупка билетов
         // Обновляем функцию покупки билетов
-// Обновляем функцию покупки
-async function purchaseTickets() {
-  if (!auth.isAuthenticated()) {
-    notifications.warning('Требуется авторизация', 'Для покупки билетов необходимо войти в систему!');
-    return;
-  }
 
-  // Для reserved seating проверяем выбранные места
-  if (currentEventSeatingConfig && currentEventSeatingConfig.type === 'reserved') {
-    if (selectedSeats.length !== currentQuantity) {
-      notifications.error('Ошибка', `Выберите ${currentQuantity} мест(а) для покупки`);
-      return;
-    }
-  }
-
-  try {
-    const result = await ticketsManager.purchaseTicket(
-      currentEvent._id, 
-      currentQuantity, 
-      '', 
-      currentEventSeatingConfig.type === 'reserved' ? selectedSeats : []
-    );
-    
-    if (result.success) {
-      console.log('Успех!', result.message);
-      // Дополнительные действия после покупки...
-    } else {
-      console.log('Ошибка', result.message);
-    }
-  } catch (error) {
-    console.log('Ошибка', 'Не удалось покупку');
-  }
-}
-// Обновленная функция покупки билетов
-async function purchaseTickets() {
-    console.log('Начало покупки билетов...');
-    
-    // Проверяем авторизацию
-    if (!auth.isAuthenticated()) {
-       console.log('warning', 'Требуется авторизация', 'Для покупки билетов необходимо войти в систему');
-        openLoginModal();
-        return;
-    }
-
-    // Проверяем доступность мероприятия
-    if (!currentEvent || !currentEvent._id) {
-         console.log('error', 'Ошибка', 'Мероприятие не выбрано');
-        return;
-    }
-
-    // Проверяем тип рассадки и выбранные места
-    const seatingConfig = currentEvent.seatingConfig || { type: 'free' };
-    
-    if (seatingConfig.type === 'reserved') {
-        // Для reserved seating проверяем выбранные места
-        if (selectedSeats.length === 0) {
-             console.log('error', 'Ошибка', 'Выберите места для покупки');
-            return;
-        }
-        
-        if (selectedSeats.length !== currentQuantity) {
-            console.log('error', 'Ошибка', `Выберите ${currentQuantity} мест(а)`);
-            return;
-        }
-    }
-
-    // Показываем загрузку
-    const purchaseBtn = document.getElementById('purchaseButton');
-    const originalText = purchaseBtn.textContent;
-    purchaseBtn.disabled = true;
-    purchaseBtn.textContent = 'Покупка...';
-
-    try {
-        console.log('Отправка запроса на покупку...');
-        
-        // Подготавливаем данные для отправки
-        const requestData = {
-            eventId: currentEvent._id,
-            quantity: currentQuantity
-        };
-
-        // Добавляем выбранные места для reserved seating
-        if (seatingConfig.type === 'reserved' && selectedSeats.length > 0) {
-            requestData.selectedSeats = selectedSeats;
-        }
-
-        // Отправляем запрос
-        const response = await fetch('/api/tickets/purchase', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${auth.token}`
-            },
-            body: JSON.stringify(requestData)
-        });
-
-        // Проверяем ответ
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        console.log('Ответ сервера:', result);
-
-        if (result.status === 'success') {
-            // Успешная покупка
-            console.log('success', 'Успех!', result.message);
-            
-            // Показываем информацию о билетах
-            showPurchaseSuccessModal(tickets);
-            
-            // Перенаправляем на страницу профиля через 3 секунды
-            // setTimeout(() => {
-            //     window.location.href = '/profile?tickets=true';
-            // }, 3000);
-            
-        } else {
-            // Ошибка от сервера
-            console.log('error', 'Ошибка', result.message || 'Неизвестная ошибка');
-        }
-
-    } catch (error) {
-        console.error('Ошибка покупки:', error);
-        console.log('error', 'Ошибка', 'Не удалось完成 покупку. Попробуйте еще раз.');
-    } finally {
-        // Восстанавливаем кнопку
-        purchaseBtn.disabled = false;
-        purchaseBtn.textContent = originalText;
-    }
-}
 
 // Открытие модального окна
 function openTicketsModal() {
@@ -2356,7 +2257,6 @@ function updateTicketsList(tickets) {
   });
 }
 
-// Создание элемента билета
 function createTicketElement(ticket, index) {
   const ticketDiv = document.createElement('div');
   ticketDiv.className = 'ticket-item';
@@ -2364,6 +2264,7 @@ function createTicketElement(ticket, index) {
   
   const eventDate = ticket.event?.date ? new Date(ticket.event.date).toLocaleDateString('ru-RU') : '-';
   const eventTime = ticket.event?.time || '-';
+  const zoneInfo = ticket.zoneName || ticket.zone || 'Зона не указана';
   
   ticketDiv.innerHTML = `
     <div class="ticket-header">
@@ -2385,9 +2286,16 @@ function createTicketElement(ticket, index) {
       </div>
       
       <div class="ticket-info-item">
-        <span class="ticket-label">Место</span>
-        <span class="ticket-value">${ticket.seat || 'Не указано'}</span>
+        <span class="ticket-label">Зона</span>
+        <span class="ticket-value">${zoneInfo}</span>
       </div>
+      
+      ${ticket.seat ? `
+      <div class="ticket-info-item">
+        <span class="ticket-label">Место</span>
+        <span class="ticket-value">${ticket.seat}</span>
+      </div>
+      ` : ''}
       
       <div class="ticket-info-item">
         <span class="ticket-label">Цена</span>
@@ -2558,35 +2466,148 @@ function showTicketsInfo(tickets) {
             document.getElementById('purchaseContent').style.display = 'block';
         }
 
-        // Обновляем функцию загрузки мероприятия
-async function loadEventInfo(eventId) {
+function updateMaxTickets() {
+    const zoneSelect = document.getElementById("ticket-zone");
+    const maxTicketsEl = document.getElementById("maxTickets");
+    
+    if (!zoneSelect || !maxTicketsEl) return;
+    
+    const selectedOption = zoneSelect.options[zoneSelect.selectedIndex];
+    const availableSeats = parseInt(selectedOption.dataset.available || currentEvent.ticketsAvailable || 0);
+    
+    maxTicketsEl.textContent = availableSeats;
+    
+    // Обновляем текущее количество если превышает доступное
+    if (currentQuantity > availableSeats) {
+        currentQuantity = availableSeats;
+        document.getElementById('quantity').textContent = currentQuantity;
+        updatePrice();
+    }
+}
+
+        async function loadEventZones(eventId) {
+    console.log('Загрузка зон для мероприятия:', eventId);
+    
     try {
-          const response = await fetch(`/api/events/id/${eventId}`);
+        // Используем правильный маршрут - по ID мероприятия (ObjectId), а не по eventId
+        const response = await fetch(`/api/events/${currentEvent._id}/zones`);
         const data = await response.json();
         
-
+        console.log('Ответ сервера по зонам:', data);
+        
         if (data.status === 'success') {
-            currentEvent = data.event;
-            displayEventInfo();
-        hideLoading();
-            
-            // Загружаем занятые места
-            await loadTakenSeats(eventId);
-            
-            // Инициализируем простой зал
-            initSimpleHall();
-            
+            currentEvent.zones = data.zones || [];
+            populateZones();
+            updateMaxTickets();
         } else {
-            console.error('Ошибка загрузки:', data.message);
+            console.error('Ошибка загрузки зон:', data.message);
+            // Скрываем выбор зоны если произошла ошибка
+            const zoneSection = document.querySelector('.form-group:has(#ticket-zone)');
+            if (zoneSection) {
+                zoneSection.style.display = 'none';
+            }
         }
     } catch (error) {
-        console.error('Ошибка сети:', error);
+        console.error('Ошибка загрузки зон:', error);
+        // Скрываем выбор зоны при ошибке сети
+        const zoneSection = document.querySelector('.form-group:has(#ticket-zone)');
+        if (zoneSection) {
+            zoneSection.style.display = 'none';
+        }
     }
+}
+
+function populateZones() {
+    const zoneSelect = document.getElementById("ticket-zone");
+    if (!zoneSelect) {
+        console.error('Элемент выбора зоны не найден');
+        return;
+    }
+    
+    // Очищаем предыдущие опции
+    zoneSelect.innerHTML = '';
+    
+    if (!currentEvent.zones || currentEvent.zones.length === 0) {
+        console.log('Зоны не найдены, скрываем выбор');
+        const zoneSection = document.querySelector('.form-group:has(#ticket-zone)');
+        if (zoneSection) {
+            zoneSection.style.display = 'none';
+        }
+        
+        // Устанавливаем цену по умолчанию из мероприятия
+        ticketPrice = currentEvent.price || 0;
+        updatePrice();
+        return;
+    }
+    
+    console.log('Заполняем зоны:', currentEvent.zones);
+    
+    // Добавляем опцию по умолчанию
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = '-- Выберите зону --';
+    defaultOption.disabled = true;
+    defaultOption.selected = true;
+    zoneSelect.appendChild(defaultOption);
+    
+    // Добавляем зоны
+    currentEvent.zones.forEach(zone => {
+        const availableSeats = zone.ticketsAvailable || zone.availableSeats || 0;
+        const option = document.createElement('option');
+        option.value = zone._id || zone.id || zone.name;
+        option.textContent = `${zone.name} - ${zone.price.toLocaleString('ru-RU')} тг. (Доступно: ${availableSeats})`;
+        option.dataset.price = zone.price;
+        option.dataset.available = availableSeats;
+        option.dataset.zoneName = zone.name;
+        zoneSelect.appendChild(option);
+    });
+    
+    // Показываем секцию выбора зоны
+    const zoneSection = document.querySelector('.form-group:has(#ticket-zone)');
+    if (zoneSection) {
+        zoneSection.style.display = 'block';
+    }
+    
+    // Добавляем обработчик изменения зоны
+    zoneSelect.onchange = function() {
+        updatePrice();
+        updateMaxTickets();
+    };
+    
+    // Обновляем цену после заполнения зон
+    updatePrice();
+}
+        // Обновляем функцию загрузки мероприятия
+async function loadEventInfo(eventId) {
+  try {
+    console.log('Загрузка информации о мероприятии:', eventId);
+    
+    const response = await fetch(`/api/events/id/${eventId}`);
+    const data = await response.json();
+    
+    console.log('Ответ сервера по мероприятию:', data);
+    
+    if (data.status === 'success') {
+      currentEvent = data.event;
+      displayEventInfo();
+      hideLoading();
+      
+      // Загружаем зоны для этого мероприятия
+      await loadEventZones(eventId);
+      
+    } else {
+      showError(data.message || 'Ошибка при загрузке информации о мероприятии');
+    }
+  } catch (error) {
+    console.error('Ошибка:', error);
+    showError('Ошибка сети при загрузке информации о мероприятии');
+  }
 }
 
 
 
 // Глобальные переменные
+let purchasedTickets = [];
 let selectedSeats = [];
 let takenSeats = [];
 let currentEventSeatingConfig = null;
@@ -2914,7 +2935,6 @@ function createFreeSeating(config) {
     }
 }
 
-// Функции для работы с QR-кодами (интеграция из tickets.js)
 function generateQRCode(ticket, container) {
   if (!window.QRCode) {
     container.innerHTML = '<div class="qr-code-placeholder">QR-код<br>недоступен</div>';
@@ -2926,6 +2946,7 @@ function generateQRCode(ticket, container) {
     event: currentEvent.title,
     date: currentEvent.date,
     time: currentEvent.time,
+    zone: ticket.zoneName || ticket.zone,
     seat: ticket.seat,
     price: ticket.price
   });
@@ -2948,25 +2969,6 @@ function generateQRCode(ticket, container) {
   } catch (error) {
     container.innerHTML = '<div class="qr-code-placeholder">QR-код<br>недоступен</div>';
   }
-}
-
-// Функция отображения модального окна с купленными билетами
-function showPurchaseSuccess(tickets) {
-  if (!tickets || tickets.length === 0) return;
-  
-  // Обновляем информацию о покупке
-  const totalPrice = tickets.reduce((sum, ticket) => sum + (ticket.price || 0), 0);
-  document.getElementById('purchasedTicketsCount').textContent = tickets.length;
-  document.getElementById('purchasedTotalPrice').textContent = totalPrice;
-  
-  // Очищаем контейнеры
-//   document.getElementById('purchaseQrCodes').innerHTML = '';
-//   document.getElementById('ticketCodesContainer').innerHTML = '';
-  
-  // Добавляем QR-коды и коды билетов
-
-  // Показываем модальное окно
-  openPurchaseSuccessModal();
 }
 
 
@@ -3318,35 +3320,9 @@ document.addEventListener('keydown', function(e) {
 });
 
 // Переменная для хранения купленных билетов
-let purchasedTickets = [];
 
-// Обновляем функцию showPurchaseSuccess
-function showPurchaseSuccess(tickets) {
-  if (!tickets || tickets.length === 0) return;
-  
-  // Сохраняем билеты для печати
-  purchasedTickets = tickets;
-  
-  const totalPrice = tickets.reduce((sum, ticket) => sum + (ticket.price || 0), 0);
-  document.getElementById('purchasedTicketsCount').textContent = tickets.length;
-  document.getElementById('purchasedTotalPrice').textContent = totalPrice;
-  
-  // Очищаем контейнер предпросмотра
-  const previewContainer = document.getElementById('ticketCodesPreview');
-  previewContainer.innerHTML = '';
-  
-  // Добавляем коды билетов в предпросмотр
-  tickets.forEach(ticket => {
-    const codeBadge = document.createElement('span');
-    codeBadge.className = 'ticket-code-badge';
-    codeBadge.textContent = ticket.code;
-    codeBadge.title = `Место: ${ticket.seat || 'не указано'}`;
-    previewContainer.appendChild(codeBadge);
-  });
-  
-  // Показываем модальное окно
-  openPurchaseSuccessModal();
-}
+
+
 
 // Генерация билетов для печати
 async function generatePrintTickets(tickets) {
@@ -3359,12 +3335,12 @@ async function generatePrintTickets(tickets) {
   }
 }
 
-// Создание элемента билета для печати
 async function createPrintTicketElement(ticket) {
   const ticketDiv = document.createElement('div');
   ticketDiv.className = 'print-ticket';
   
   const eventDate = ticket.event?.date ? new Date(ticket.event.date).toLocaleDateString('ru-RU') : '-';
+  const zoneInfo = ticket.zoneName || ticket.zone || 'Зона не указана';
   
   ticketDiv.innerHTML = `
     <div class="print-ticket-header">
@@ -3389,9 +3365,16 @@ async function createPrintTicketElement(ticket) {
       </div>
       
       <div class="print-ticket-info-item">
-        <span class="print-ticket-info-label">Место:</span>
-        <span class="print-ticket-info-value">${ticket.seat || 'Не указано'}</span>
+        <span class="print-ticket-info-label">Зона:</span>
+        <span class="print-ticket-info-value">${zoneInfo}</span>
       </div>
+      
+      ${ticket.seat ? `
+      <div class="print-ticket-info-item">
+        <span class="print-ticket-info-label">Место:</span>
+        <span class="print-ticket-info-value">${ticket.seat}</span>
+      </div>
+      ` : ''}
       
       <div class="print-ticket-info-item">
         <span class="print-ticket-info-label">Цена:</span>
@@ -3514,90 +3497,43 @@ let currentPrintTickets = [];
 // Функция скачивания как PNG
 
 
-// Функция скачивания как PDF с форматом А4
 async function downloadAsPDF() {
   try {
     showLoading('Генерация PDF...');
-    
-    const tickets = document.querySelectorAll('.print-ticket');
-const canvasPromises = Array.from(tickets).map(async (ticketElement, index) => {
-  const canvas = await html2canvas(ticketElement);
-  const ticketObj = currentPrintTickets[index];
-  const code = ticketObj && ticketObj.code ? ticketObj.code : `unknown-${index+1}`;
-  return {
-    canvas,
-    filename: `билет-${code}.png`
-  };
-});
-    
-    if (tickets.length === 0) {
-      alert('Ошибка! Нет билетов для скачивания');
-      return;
-    }
-    
-    // Создаем новый PDF документ
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
       format: 'a4'
     });
-    
-    // Размеры страницы А4 в мм
+
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 15; // Отступы со всех сторон
-    
-    // Доступная область для контента
-    const contentWidth = pageWidth - margin * 2;
-    const contentHeight = pageHeight - margin * 2;
-    
-    // Генерируем каждый билет на отдельной странице А4
-    for (let i = 0; i < tickets.length; i++) {
-      if (i > 0) {
-        doc.addPage(); // Новая страница для каждого билета
-      }
-      
-      const ticketElement = tickets[i];
-      const canvas = await html2canvas(ticketElement, {
-        scale: 2, // Увеличиваем качество
-        useCORS: true,
-        logging: false
-      });
-      
-      const imgData = canvas.toDataURL('image/png', 1.0);
-      
-      // Рассчитываем размеры для сохранения пропорций
-      const imgRatio = canvas.width / canvas.height;
-      let imgWidth = contentWidth;
-      let imgHeight = contentWidth / imgRatio;
-      
-      // Если высота слишком большая, масштабируем по высоте
-      if (imgHeight > contentHeight) {
-        imgHeight = contentHeight;
-        imgWidth = contentHeight * imgRatio;
-      }
-      
-      // Центрируем изображение на странице
-      const x = margin + (contentWidth - imgWidth) / 2;
-      const y = margin + (contentHeight - imgHeight) / 2;
-      
-      // Добавляем изображение в PDF
-      doc.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
-      
-      // Добавляем номер страницы (если нужно)
-      if (tickets.length > 1) {
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Билет ${i + 1} из ${tickets.length}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
-      }
-    }
-    
-    // Сохраняем PDF
-    doc.save('билеты.pdf');
-    
-    alert('Успешно! Билеты скачаны как PDF');
-    
+
+    // 👉 Включаем "печатный режим"
+    document.body.classList.add('print-mode');
+
+    // ⚡ Рендерим весь body
+    const canvas = await html2canvas(document.body, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: "#fff",
+      windowWidth: document.documentElement.scrollWidth,
+      windowHeight: document.documentElement.scrollHeight
+    });
+
+    const imgData = canvas.toDataURL('image/png', 1.0);
+
+    // 🚀 Растягиваем на всю страницу PDF
+    doc.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
+
+    // 👉 Отключаем "печатный режим"
+    document.body.classList.remove('print-mode');
+
+    doc.save('страница.pdf');
+    alert('Успешно! Страница скачана как PDF');
   } catch (error) {
     console.error('Ошибка генерации PDF:', error);
     alert('Ошибка! Не удалось создать PDF файл');
@@ -3605,6 +3541,8 @@ const canvasPromises = Array.from(tickets).map(async (ticketElement, index) => {
     hideLoading();
   }
 }
+
+
 
 // Вспомогательная функция для загрузки скриптов
 function loadScript(src) {
@@ -3709,6 +3647,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     </script>
-    <script src="/js/tickets.js"></script>
+    
 </body>
 </html>
