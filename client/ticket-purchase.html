@@ -3387,12 +3387,9 @@ async function createPrintTicketElement(ticket) {
       </div>
     </div>
     
-     ${ticket.qrCode ? `
-              <div class="ticket-qr">
-                <img src="${ticket.qrCode}" alt="QR-код билета" style="max-width: 120px;">
-                <p class="qr-hint">Покажите этот QR-код на входе</p>
-              </div>
-            ` : ''}
+    <div class="print-ticket-qr" id="print-qr-${ticket.code}">
+      <div class="qr-loading">Генерация QR-кода...</div>
+    </div>
     
     <div class="print-ticket-footer">
       Предъявите этот билет на входе. Билет действителен только при предъявлении QR-кода.
@@ -3502,6 +3499,7 @@ let currentPrintTickets = [];
 
 async function downloadAsPDF() {
   try {
+    showLoading('Генерация PDF...');
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({
