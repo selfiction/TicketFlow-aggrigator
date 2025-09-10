@@ -2312,10 +2312,17 @@ function createTicketElement(ticket, index) {
         <span class="ticket-value">${ticket.status || 'Активен'}</span>
       </div>
     </div>
+
+   <div class="ticket-qr">
+                <img src="${ticket.qrCode}" alt="QR-код билета" style="max-width: 120px;">
+                <p class="qr-hint">Покажите этот QR-код на входе</p>
+              </div>
   `;
   
   return ticketDiv;
 }
+
+
 
 // Вспомогательная функция для получения класса статуса
 function getStatusClass(status) {
@@ -2327,52 +2334,7 @@ function getStatusClass(status) {
   return statusMap[status] || 'active';
 }
 
-function printTickets() {
-  const printContent = document.getElementById('purchaseSuccessModal').cloneNode(true);
-  
-  // Убираем ненужные элементы для печати
-  const elementsToRemove = printContent.querySelectorAll('.modal-header, .purchase-actions, .close-modal');
-  elementsToRemove.forEach(el => el.remove());
-  
-  // Создаем временное окно для печати
-  const printWindow = window.open('', '_blank');
-  printWindow.document.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Билеты на ${currentEvent.title}</title>
-      <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        .qr-code-item { margin: 10px; display: inline-block; text-align: center; }
-        .qr-code-container { margin: 0 auto; }
-        .ticket-code-badge { 
-          background: #000; color: #fff; padding: 5px 10px; 
-          margin: 2px; border-radius: 10px; font-family: monospace;
-        }
-        @media print {
-          .qr-code-item { break-inside: avoid; }
-        }
-      </style>
-    </head>
-    <body>
-      <h1>Билеты на: ${currentEvent.title}</h1>
-      <p>Дата: ${new Date(currentEvent.date).toLocaleDateString('ru-RU')} в ${currentEvent.time}</p>
-      <p>Место: ${currentEvent.venue}, ${currentEvent.city}</p>
-      <hr>
-      ${printContent.innerHTML}
-    </body>
-    </html>
-  `);
-  
-  printWindow.document.close();
-  printWindow.focus();
-  
-  // Даем время на загрузку изображений
-  setTimeout(() => {
-    printWindow.print();
-    // printWindow.close(); // Можно раскомментировать для автоматического закрытия
-  }, 500);
-}
+
 
 // Просмотр деталей билета
 function viewTicketDetails(ticketCode) {
@@ -2391,6 +2353,33 @@ function invalidateTicket(ticketCode) {
     
     // Обновляем статус в интерфейсе
     updateTicketStatus(ticketCode, 'Недействителен');
+  }
+}
+
+// Функция для получения QR-кода билета
+async function getTicketQRCode(ticketId) {
+  try {
+    const response = await fetch(`/api/tickets/${ticketId}/qrcode`);
+    const data = await response.json();
+    
+    if (data.status === 'success') {
+      return {
+        success: true,
+        qrCodeUrl: data.qrCodeUrl,
+        ticket: data.ticket
+      };
+    } else {
+      return {
+        success: false,
+        message: data.message
+      };
+    }
+  } catch (error) {
+    console.error('Ошибка получения QR-кода:', error);
+    return {
+      success: false,
+      message: 'Ошибка получения QR-кода'
+    };
   }
 }
 
@@ -3217,14 +3206,10 @@ function createTicketElement(ticket, index) {
       </div>
     </div>
   `;
+
+   document.body.appendChild(modal);
   
-  // Генерируем QR-код после добавления в DOM
-  setTimeout(() => {
-    const qrContainer = ticketDiv.querySelector(`#qr-${ticket.code}`);
-    if (qrContainer) {
-      generateQRCode(ticket, qrContainer);
-    }
-  }, 100);
+ generateQRForPrint(ticket, `qr-container-${ticket.code}`);
   
   return ticketDiv;
 }
@@ -3285,25 +3270,44 @@ function isSeatSelected(section, row, number) {
 }
 
 // Функция открытия страницы печати
+// Функция открытия страницы печати
 function openPrintPage() {
-  // Скрываем модальное окно
-  closePurchaseSuccessModal();
-  
-  // Показываем страницу печати
-  document.getElementById('printPage').style.display = 'block';
-  
-   // Заполняем информацию о мероприятии
-  document.getElementById('printEventTitle').textContent = currentEvent.title;
-  document.getElementById('printEventDate').textContent = 
-    `${new Date(currentEvent.date).toLocaleDateString('ru-RU')} в ${currentEvent.time}`;
-  document.getElementById('printEventLocation').textContent = 
-    `${currentEvent.venue}, ${currentEvent.city}`;
-  document.getElementById('printGenerationDate').textContent = 
-    new Date().toLocaleString('ru-RU');
-  
-  // Генерируем билеты для печати
-  generatePrintTickets(purchasedTickets);
-  
+    // Скрываем модальное окно
+    closePurchaseSuccessModal();
+    
+    // Показываем страницу печати
+    const printPage = document.getElementById('printPage');
+    if (printPage) {
+        printPage.style.display = 'block';
+    } else {
+        console.error('Страница печати не найдена');
+        return;
+    }
+    
+    // Заполняем информацию о мероприятии
+    const printEventTitle = document.getElementById('printEventTitle');
+    const printEventDate = document.getElementById('printEventDate');
+    const printEventLocation = document.getElementById('printEventLocation');
+    const printGenerationDate = document.getElementById('printGenerationDate');
+    
+    if (printEventTitle) printEventTitle.textContent = currentEvent.title;
+    if (printEventDate) printEventDate.textContent = 
+        `${new Date(currentEvent.date).toLocaleDateString('ru-RU')} в ${currentEvent.time}`;
+    if (printEventLocation) printEventLocation.textContent = 
+        `${currentEvent.venue}, ${currentEvent.city}`;
+    if (printGenerationDate) printGenerationDate.textContent = 
+        new Date().toLocaleString('ru-RU');
+    
+    // Генерируем билеты для печати
+    if (purchasedTickets && purchasedTickets.length > 0) {
+        generatePrintTickets(purchasedTickets);
+    } else {
+        console.error('Нет данных о купленных билетах');
+        const printContainer = document.getElementById('printTicketsContainer');
+        if (printContainer) {
+            printContainer.innerHTML = '<div class="error">Нет данных о билетах</div>';
+        }
+    }
 }
 
 // Функция закрытия страницы печати
@@ -3321,19 +3325,148 @@ document.addEventListener('keydown', function(e) {
 
 // Переменная для хранения купленных билетов
 
+// Генерация QR-кода для печати
+async function generateQRForPrint(ticket, containerId) {
+    try {
+        const container = document.getElementById(containerId);
+        if (!container) {
+            console.error('Контейнер не найден:', containerId);
+            return;
+        }
 
+        if (!window.QRCode) {
+            container.innerHTML = `
+                <div class="qr-code-fallback">
+                    <div class="qr-code-text">Код билета:</div>
+                    <div class="qr-code-value">${ticket.code}</div>
+                </div>
+            `;
+            return;
+        }
+        
+        const qrData = JSON.stringify({
+            code: ticket.code,
+            event: currentEvent.title,
+            date: currentEvent.date,
+            time: currentEvent.time,
+            venue: currentEvent.venue,
+            city: currentEvent.city,
+            zone: ticket.zoneName || ticket.zone,
+            seat: ticket.seat,
+            price: ticket.price
+        });
+        
+        // Очищаем контейнер
+        container.innerHTML = '';
+        
+        // Создаем QR-код
+        new QRCode(container, {
+            text: qrData,
+            width: 120,
+            height: 120,
+            margin: 1,
+            color: {
+                dark: '#000000',
+                light: '#ffffff'
+            }
+        });
+        
+    } catch (error) {
+        console.error('Ошибка генерации QR-кода для печати:', error);
+        const container = document.getElementById(containerId);
+        if (container) {
+            container.innerHTML = `
+                <div class="qr-code-error">
+                    <div class="qr-error-text">Ошибка генерации QR-кода</div>
+                    <div class="qr-code-value">${ticket.code}</div>
+                </div>
+            `;
+        }
+    }
+}
+
+// Генерация QR-кода для превью
+function generateQRCodeForPreview(ticket) {
+    const containerId = `preview-qr-${ticket.code}`;
+    const container = document.getElementById(containerId);
+    
+    if (!container) {
+        console.error('Контейнер для превью не найден:', containerId);
+        return;
+    }
+
+    try {
+        // Очищаем контейнер
+        container.innerHTML = '';
+
+        // Создаем QR-код
+        new QRCode(container, {
+            text: ticket.qrData,
+            width: 80,
+            height: 80,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        // Добавляем обработчик для просмотра в полном размере
+        container.onclick = () => viewQRCode(ticket.code);
+        
+    } catch (error) {
+        console.error('Ошибка генерации QR-кода:', error);
+        container.innerHTML = `
+            <div class="qr-code-error">
+                <div class="qr-error-text">Ошибка QR</div>
+                <div class="qr-code-value">${ticket.code}</div>
+            </div>
+        `;
+    }
+}
 
 
 // Генерация билетов для печати
+// Генерация билетов для печати
 async function generatePrintTickets(tickets) {
-  const container = document.getElementById('printTicketsContainer');
-  container.innerHTML = '';
-  
-  for (const ticket of tickets) {
-    const ticketElement = await createPrintTicketElement(ticket);
-    container.appendChild(ticketElement);
-  }
+    const container = document.getElementById('printTicketsContainer');
+    if (!container) {
+        console.error('Контейнер для печати не найден');
+        return;
+    }
+    
+    // Показываем сообщение о загрузке
+    container.innerHTML = '<div class="loading">Подготовка билетов...</div>';
+    
+    try {
+        // Сначала создаем все билеты
+        const ticketElements = [];
+        for (const ticket of tickets) {
+            const ticketElement = await createPrintTicketElement(ticket);
+            ticketElements.push(ticketElement);
+        }
+        
+        // Очищаем контейнер и добавляем все билеты сразу
+        container.innerHTML = '';
+        ticketElements.forEach(element => {
+            container.appendChild(element);
+        });
+        
+        console.log('Билеты добавлены в DOM, генерируем QR-коды...');
+        
+        // Теперь генерируем QR-коды после того как все элементы в DOM
+        await generateQRCodesAfterRender(tickets);
+
+        
+        console.log('Все QR-коды сгенерированы');
+        
+    } catch (error) {
+        console.error('Ошибка создания билетов:', error);
+        container.innerHTML = '<div class="error">Ошибка при создании билетов</div>';
+    }
 }
+
+
+
+
 
 async function createPrintTicketElement(ticket) {
   const ticketDiv = document.createElement('div');
@@ -3386,10 +3519,12 @@ async function createPrintTicketElement(ticket) {
         <span class="print-ticket-info-value">${ticket.event?.venue || '-'}, ${ticket.event?.city || '-'}</span>
       </div>
     </div>
-    
-    <div class="print-ticket-qr" id="print-qr-${ticket.code}">
-      <div class="qr-loading">Генерация QR-кода...</div>
-    </div>
+
+    <!-- Контейнер для QR-кода -->
+            <div class="qr-code-container" id="qr-container-${ticket.code}">
+                <div class="qr-loading">Генерация QR-кода...</div>
+            </div>
+        </div>
     
     <div class="print-ticket-footer">
       Предъявите этот билет на входе. Билет действителен только при предъявлении QR-кода.
@@ -3397,59 +3532,13 @@ async function createPrintTicketElement(ticket) {
   `;
   
   // Генерируем QR-код для печати
-  await generateQRForPrint(ticket, ticketDiv.querySelector('.print-ticket-qr'));
+ await generateQRForPrint(ticket, `qr-container-${ticket.code}`);
+
   
   return ticketDiv;
 }
 
-// Генерация QR-кода для печати
-async function generateQRForPrint(ticket, container) {
-  try {
-    if (!window.QRCode) {
-      // Если библиотека не загружена, показываем код текстом
-      container.innerHTML = `
-        <div style="text-align: center; padding: 10px;">
-          <div style="font-family: monospace; font-size: 10px; margin-bottom: 5px;">
-            Код билета:
-          </div>
-          <div style="font-family: monospace; font-weight: bold; font-size: 14px;">
-            ${ticket.code}
-          </div>
-        </div>
-      `;
-      return;
-    }
-    
-    const qrData = JSON.stringify({
-      code: ticket.code,
-      event: currentEvent.title,
-      date: currentEvent.date,
-      time: currentEvent.time,
-      seat: ticket.seat,
-      price: ticket.price
-    });
-    
-    QRCode.toCanvas(container, qrData, {
-      width: 120,
-      height: 120,
-      margin: 1,
-      color: {
-        dark: '#000000',
-        light: '#ffffff'
-      }
-    });
-    
-  } catch (error) {
-    console.error('Ошибка генерации QR-кода для печати:', error);
-    container.innerHTML = `
-      <div style="text-align: center; padding: 10px;">
-        <div style="font-family: monospace; font-size: 12px;">
-          ${ticket.code}
-        </div>
-      </div>
-    `;
-  }
-}
+
 
 // Функция копирования всех кодов билетов
 function copyAllTicketCodes() {
@@ -3594,6 +3683,90 @@ function showLoading(message = 'Загрузка...') {
   loadingElement.style.display = 'flex';
 }
 
+
+// Генерация QR-кодов после того как все билеты добавлены в DOM
+async function generateQRCodesAfterRender(tickets) {
+    // Даем время браузеру отрисовать DOM
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    for (const ticket of tickets) {
+        const containerId = `qr-container-${ticket.code}`;
+        await generateQRCodeForContainer(ticket, containerId);
+        // Небольшая пауза между QR-кодами
+        await new Promise(resolve => setTimeout(resolve, 50));
+    }
+}
+
+// Генерация QR-кода для конкретного контейнера
+async function generateQRCodeForContainer(ticket, containerId) {
+    return new Promise((resolve) => {
+        // Даем дополнительное время для гарантии что DOM готов
+        setTimeout(() => {
+            try {
+                const container = document.getElementById(containerId);
+                if (!container) {
+                    console.warn('QR контейнер не найден, пробуем найти позже:', containerId);
+                    // Пробуем еще раз через секунду
+                    setTimeout(() => generateQRCodeForContainer(ticket, containerId).then(resolve), 1000);
+                    return;
+                }
+
+                if (!window.QRCode) {
+                    container.innerHTML = `
+                        <div class="qr-code-fallback">
+                            <div class="qr-code-text">Код билета:</div>
+                            <div class="qr-code-value">${ticket.code}</div>
+                        </div>
+                    `;
+                    resolve();
+                    return;
+                }
+                
+                const qrData = JSON.stringify({
+                    code: ticket.code,
+                    event: currentEvent.title,
+                    date: currentEvent.date,
+                    time: currentEvent.time,
+                    venue: currentEvent.venue,
+                    city: currentEvent.city,
+                    zone: ticket.zoneName || ticket.zone,
+                    seat: ticket.seat,
+                    price: ticket.price
+                });
+                
+                // Очищаем контейнер
+                container.innerHTML = '';
+                
+                // Создаем QR-код
+                new QRCode(container, {
+                    text: qrData,
+                    width: 120,
+                    height: 120,
+                    margin: 1,
+                    color: {
+                        dark: '#000000',
+                        light: '#ffffff'
+                    }
+                });
+                
+                console.log('QR-код сгенерирован для:', ticket.code);
+                
+            } catch (error) {
+                console.error('Ошибка генерации QR-кода для', ticket.code, ':', error);
+                const container = document.getElementById(containerId);
+                if (container) {
+                    container.innerHTML = `
+                        <div class="qr-code-error">
+                            <div class="qr-error-text">Ошибка QR-кода</div>
+                            <div class="qr-code-value">${ticket.code}</div>
+                        </div>
+                    `;
+                }
+            }
+            resolve();
+        }, 150); // Увеличиваем задержку
+    });
+}
 
 
 const canvasPromises = Array.from(tickets).map(async (ticketElement, index) => {
