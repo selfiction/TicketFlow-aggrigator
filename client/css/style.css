@@ -128,9 +128,8 @@
         
         .header-content {
             display: flex;
-            justify-content: space-between;
+
             align-items: center;
-            padding: 15px 0;
         }
         
         .logo {
@@ -717,7 +716,6 @@
             }
             
             .header-content {
-                flex-direction:column;
                 text-align: center;
             }
             
